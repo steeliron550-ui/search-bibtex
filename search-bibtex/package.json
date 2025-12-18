@@ -1,0 +1,31 @@
+{
+  "name": "search-bibtex",
+  "version": "0.1.0",
+  "description": "Standalone CLI and Codex skill for extracting PDF metadata, searching paper records, and selecting BibTeX entries.",
+  "type": "module",
+  "bin": {
+    "search-bibtex": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "commander": "^14.0.1",
+    "ink": "^6.3.1",
+    "pdf-parse": "^2.4.5",
+    "react": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.14"
+  }
+}
