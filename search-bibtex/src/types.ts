@@ -22,12 +22,34 @@ export interface SearchPreferences {
 
 export interface PdfMetadataCandidate {
   filePath: string;
+  pageCount: number;
   title?: string;
   authors: string[];
   year?: number;
   doi?: string;
   arxivId?: string;
   textSample: string;
+}
+
+export interface PdfDocumentSnapshot {
+  filePath: string;
+  pageCount: number;
+  info: {
+    title?: string;
+    author?: string;
+    subject?: string;
+    keywords?: string;
+  };
+  text: string;
+  lines: string[];
+}
+
+export type SearchQueryKind = "doi" | "arxiv" | "title" | "title-author";
+
+export interface SearchQueryCandidate {
+  kind: SearchQueryKind;
+  value: string;
+  confidence: number;
 }
 
 export interface SearchResult {
