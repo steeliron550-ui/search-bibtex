@@ -87,6 +87,8 @@
 产物：
 
 - 多源搜索模块，优先覆盖 arXiv、Crossref、Semantic Scholar、OpenAlex，必要时用 DBLP 或 DOI 内容协商补充 BibTeX。
+- DBLP 是一等 BibTeX 信息源，必须支持 DBLP publication search API 和单条记录 BibTeX 抓取。
+- Grok search 只能作为本次项目构建时的资料检索辅助，不得接入 CLI、skill 或运行时代码。
 - 结果归一化为统一 `SearchResult`。
 - 模糊匹配和排序模块，支持用户配置来源优先级、字段权重和结果数量。
 - BibTeX 获取与规范化模块。
