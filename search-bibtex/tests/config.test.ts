@@ -5,6 +5,7 @@ import { defaultSearchPreferences } from "../src/config.js";
 describe("defaultSearchPreferences", () => {
   it("keeps source priorities and weights explicit", () => {
     expect(defaultSearchPreferences.sourcePriority).toEqual([
+      "dblp",
       "arxiv",
       "crossref",
       "semantic-scholar",
