@@ -4,6 +4,8 @@ import { Command } from "commander";
 import { defaultSearchPreferences } from "./config.js";
 import { buildMetadataCandidate, generateSearchQueries } from "./metadata.js";
 import { extractPdfDocumentSnapshot } from "./pdf.js";
+import { searchBibtexFromPdf } from "./search.js";
+import type { PaperSource, SortWeights } from "./types.js";
 
 export function createProgram(): Command {
   const program = new Command();
@@ -33,6 +35,37 @@ export function createProgram(): Command {
       process.stdout.write(`${JSON.stringify({ metadata, queries }, null, 2)}\n`);
     });
 
+  program
+    .command("search")
+    .description("Extract local PDF metadata, search bibliographic sources, rank candidates, and fetch BibTeX.")
+    .argument("<pdf>", "Path to a local PDF file.")
+    .option("-p, --pages <count>", "Number of leading pages to inspect.", parsePositiveInteger, 2)
+    .option("-l, --limit <count>", "Maximum ranked BibTeX candidates to return.", parsePositiveInteger)
+    .option(
+      "--source-priority <sources>",
+      "Comma-separated source priority, e.g. dblp,arxiv,crossref,openalex,doi."
+    )
+    .option(
+      "--weights <weights>",
+      "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
+    )
+    .action(async (pdf: string, options: SearchCommandOptions) => {
+      const response = await searchBibtexFromPdf(pdf, {
+        pages: options.pages,
+        preferences: {
+          limit: options.limit,
+          sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
+          weights: options.weights ? parseWeights(options.weights) : undefined
+        }
+      });
+
+      if (response.results.length === 0 && response.sourceErrors.length > 0) {
+        throw new Error(`Search returned no results. Source errors: ${JSON.stringify(response.sourceErrors)}`);
+      }
+
+      process.stdout.write(`${JSON.stringify(response, null, 2)}\n`);
+    });
+
   return program;
 }
 
@@ -42,6 +75,45 @@ function parsePositiveInteger(value: string): number {
     throw new Error(`Expected a positive integer, got ${value}`);
   }
   return parsed;
+}
+
+interface SearchCommandOptions {
+  pages: number;
+  limit?: number;
+  sourcePriority?: string;
+  weights?: string;
+}
+
+function parseSourcePriority(value: string): PaperSource[] {
+  const sources = value.split(",").map((source) => source.trim()).filter(Boolean);
+  const knownSources = new Set(defaultSearchPreferences.sourcePriority);
+  const unknown = sources.filter((source) => !knownSources.has(source as PaperSource));
+  if (unknown.length > 0) {
+    throw new Error(`Unknown source(s): ${unknown.join(", ")}`);
+  }
+  return sources as PaperSource[];
+}
+
+function parseWeights(value: string): Partial<SortWeights> {
+  const weights: Partial<SortWeights> = {};
+  const knownWeights = new Set(Object.keys(defaultSearchPreferences.weights));
+
+  for (const pair of value.split(",")) {
+    const [key, rawNumber] = pair.split("=");
+    if (!key || rawNumber === undefined) {
+      throw new Error(`Invalid weight expression: ${pair}`);
+    }
+    if (!knownWeights.has(key)) {
+      throw new Error(`Unknown weight: ${key}`);
+    }
+    const number = Number.parseFloat(rawNumber);
+    if (!Number.isFinite(number) || number < 0) {
+      throw new Error(`Invalid weight value for ${key}: ${rawNumber}`);
+    }
+    weights[key as keyof SortWeights] = number;
+  }
+
+  return weights;
 }
 
 export async function main(argv = process.argv): Promise<void> {
