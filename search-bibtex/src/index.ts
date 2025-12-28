@@ -17,6 +17,16 @@ export {
 export { extractPdfDocumentSnapshot } from "./pdf.js";
 export { rankBibliographicCandidates, scoreCandidate, textSimilarity } from "./ranking.js";
 export {
+  createSelectionState,
+  formatSelectedResult,
+  keypressToSelectionEvent,
+  renderSelection,
+  runInteractiveSelection,
+  selectedResultByIndex,
+  updateSelectionState,
+  visibleIndexes
+} from "./selection.js";
+export {
   mergeSearchPreferences,
   normalizeArxivFeed,
   normalizeDblpHits,
@@ -36,3 +46,4 @@ export type {
   SearchSourceError,
   SortWeights
 } from "./types.js";
+export type { SelectionEvent, SelectionState, SelectionMode } from "./selection.js";
