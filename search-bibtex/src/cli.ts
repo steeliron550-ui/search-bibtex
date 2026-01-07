@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { writeFile } from "node:fs/promises";
 
+import { refineBibtexFile } from "./bibtex-file.js";
 import { defaultSearchPreferences } from "./config.js";
 import { buildMetadataCandidate, generateSearchQueries } from "./metadata.js";
 import { extractPdfDocumentSnapshot } from "./pdf.js";
@@ -70,6 +72,51 @@ export function createProgram(): Command {
       }
 
       process.stdout.write(`${JSON.stringify(response, null, 2)}\n`);
+    });
+
+  program
+    .command("update-bibtex")
+    .description("Refresh an existing BibTeX file by fuzzy-matching titles and preserving citation keys.")
+    .argument("<bibtex>", "Path to a local BibTeX file.")
+    .option("-o, --output <path>", "Write the updated BibTeX to a file.")
+    .option("-i, --in-place", "Overwrite the input BibTeX file.")
+    .option("-l, --limit <count>", "Maximum ranked BibTeX candidates to return.", parsePositiveInteger)
+    .option(
+      "--source-priority <sources>",
+      "Comma-separated source priority, e.g. dblp,arxiv,crossref,openalex,doi."
+    )
+    .option(
+      "--weights <weights>",
+      "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
+    )
+    .action(async (bibtexPath: string, options: UpdateBibtexCommandOptions) => {
+      if (options.output && options.inPlace) {
+        throw new Error("Use either --output or --in-place, not both.");
+      }
+
+      const result = await refineBibtexFile(bibtexPath, {
+        preferences: {
+          limit: options.limit,
+          sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
+          weights: options.weights ? parseWeights(options.weights) : undefined
+        }
+      });
+
+      if (result.sourceErrors.length > 0) {
+        process.stderr.write(`${JSON.stringify({ sourceErrors: result.sourceErrors }, null, 2)}\n`);
+      }
+
+      if (options.output) {
+        await writeFile(options.output, result.text);
+        return;
+      }
+
+      if (options.inPlace) {
+        await writeFile(bibtexPath, result.text);
+        return;
+      }
+
+      process.stdout.write(result.text);
     });
 
   program
@@ -143,6 +190,11 @@ interface SearchCommandOptions {
 interface SelectCommandOptions extends SearchCommandOptions {
   selectIndex?: number;
   format: "bibtex" | "json";
+}
+
+interface UpdateBibtexCommandOptions extends SearchCommandOptions {
+  output?: string;
+  inPlace?: boolean;
 }
 
 function parseSourcePriority(value: string): PaperSource[] {
