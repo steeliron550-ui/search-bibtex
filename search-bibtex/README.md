@@ -17,82 +17,52 @@
 
 ## 环境要求
 
-- 构建二进制时需要 Node.js 20 或更新版本。
-- 构建二进制时需要 pnpm。
 - 运行二进制时不需要本机安装 Node.js。
 - 可访问 DBLP、arXiv、Crossref、OpenAlex、doi.org 和 Semantic Scholar 等外部服务的网络环境。
 
 ## 获取二进制
 
-在仓库内构建所有平台产物：
-
-```bash
-pnpm --dir search-bibtex install
-pnpm --dir search-bibtex build:binaries
-```
-
-只构建当前平台：
-
-```bash
-pnpm --dir search-bibtex build:binary
-```
-
-构建结果位于：
+二进制文件按平台和架构分目录放置：
 
 ```text
-search-bibtex/dist-bin/
+search-bibtex/dist-bin/<platform-arch>/search-bibtex
+search-bibtex/dist-bin/<platform-arch>/search-bibtex.exe
 ```
 
-当前会生成这些目标：
-
-```text
-search-bibtex-linux-x64
-search-bibtex-linux-arm64
-search-bibtex-macos-x64
-search-bibtex-macos-arm64
-search-bibtex-win-x64.exe
-search-bibtex-win-arm64.exe
-```
-
-在 Linux 上交叉构建 macOS 产物时，生成文件未签名。分发给 macOS 用户前需要在 macOS 上执行：
-
-```bash
-codesign --sign - dist-bin/search-bibtex-macos-x64
-codesign --sign - dist-bin/search-bibtex-macos-arm64
-```
+不同平台的可执行文件保持同名，Windows 只是在文件扩展名上不同。
 
 ## CLI 用法
 
 查看默认排序配置：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 config-defaults
+./dist-bin/linux-x64/search-bibtex config-defaults
 ```
 
 查看帮助：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 --help
-./dist-bin/search-bibtex-linux-x64 -h
-./dist-bin/search-bibtex-linux-x64 select --help
+./dist-bin/linux-x64/search-bibtex --help
+./dist-bin/linux-x64/search-bibtex -h
+./dist-bin/linux-x64/search-bibtex select --help
 ```
 
 Windows 对应：
 
 ```powershell
-.\dist-bin\search-bibtex-win-x64.exe config-defaults
+.\dist-bin\win-x64\search-bibtex.exe config-defaults
 ```
 
 提取 PDF 元数据和查询候选：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 metadata paper.pdf
+./dist-bin/linux-x64/search-bibtex metadata paper.pdf
 ```
 
 搜索并返回 JSON 候选：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 search paper.pdf \
+./dist-bin/linux-x64/search-bibtex search paper.pdf \
   --source-priority dblp,arxiv,crossref,openalex,doi \
   --limit 5
 ```
@@ -100,13 +70,13 @@ Windows 对应：
 交互选择 BibTeX：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 select paper.pdf
+./dist-bin/linux-x64/search-bibtex select paper.pdf
 ```
 
 非交互选择第 0 个候选，适合脚本：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 select paper.pdf \
+./dist-bin/linux-x64/search-bibtex select paper.pdf \
   --select-index 0 \
   --format bibtex
 ```
@@ -114,7 +84,7 @@ Windows 对应：
 输出完整 JSON：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 select paper.pdf \
+./dist-bin/linux-x64/search-bibtex select paper.pdf \
   --select-index 0 \
   --format json
 ```
@@ -122,13 +92,13 @@ Windows 对应：
 更新现有 BibTeX 文件并保留引用名：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 update-bibtex pdfs/test.bib --in-place
+./dist-bin/linux-x64/search-bibtex update-bibtex pdfs/test.bib --in-place
 ```
 
 写到新文件：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 update-bibtex pdfs/test.bib --output updated.bib
+./dist-bin/linux-x64/search-bibtex update-bibtex pdfs/test.bib --output updated.bib
 ```
 
 ## 排序配置
@@ -153,7 +123,7 @@ semantic-scholar
 字段权重通过 `--weights` 设置：
 
 ```bash
-./dist-bin/search-bibtex-linux-x64 search paper.pdf \
+./dist-bin/linux-x64/search-bibtex search paper.pdf \
   --weights title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05
 ```
 
