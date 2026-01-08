@@ -8,6 +8,12 @@ export {
   normalizeBibtex
 } from "./bibtex.js";
 export {
+  parseBibtexDocument,
+  parseBibtexEntry,
+  refineBibtexDocument,
+  refineBibtexFile
+} from "./bibtex-file.js";
+export {
   buildMetadataCandidate,
   extractArxivId,
   extractDoi,
