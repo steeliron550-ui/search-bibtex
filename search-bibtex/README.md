@@ -49,33 +49,33 @@ search-bibtex/agents/openai.yaml
 查看默认排序配置：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex config-defaults
+search-bibtex config-defaults
 ```
 
 查看帮助：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex --help
-./dist-bin/linux-x64/search-bibtex -h
-./dist-bin/linux-x64/search-bibtex select --help
+search-bibtex --help
+search-bibtex -h
+search-bibtex select --help
 ```
 
 Windows 对应：
 
 ```powershell
-.\dist-bin\win-x64\search-bibtex.exe config-defaults
+search-bibtex.exe config-defaults
 ```
 
 提取 PDF 元数据和查询候选：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex metadata paper.pdf
+search-bibtex metadata paper.pdf
 ```
 
 搜索并返回 JSON 候选：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex search paper.pdf \
+search-bibtex search paper.pdf \
   --source-priority dblp,arxiv,crossref,openalex,doi \
   --limit 5
 ```
@@ -83,13 +83,13 @@ Windows 对应：
 交互选择 BibTeX：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex select paper.pdf
+search-bibtex select paper.pdf
 ```
 
 非交互选择第 0 个候选，适合脚本：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex select paper.pdf \
+search-bibtex select paper.pdf \
   --select-index 0 \
   --format bibtex
 ```
@@ -97,7 +97,7 @@ Windows 对应：
 输出完整 JSON：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex select paper.pdf \
+search-bibtex select paper.pdf \
   --select-index 0 \
   --format json
 ```
@@ -105,13 +105,13 @@ Windows 对应：
 更新现有 BibTeX 文件并保留引用名：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex update-bibtex pdfs/test.bib --in-place
+search-bibtex update pdfs/test.bib --in-place
 ```
 
 写到新文件：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex update-bibtex pdfs/test.bib --output updated.bib
+search-bibtex update pdfs/test.bib --output updated.bib
 ```
 
 ## 排序配置
@@ -136,7 +136,7 @@ semantic-scholar
 字段权重通过 `--weights` 设置：
 
 ```bash
-./dist-bin/linux-x64/search-bibtex search paper.pdf \
+search-bibtex search paper.pdf \
   --weights title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05
 ```
 
