@@ -16,7 +16,7 @@ describe("cli help", () => {
     expect(result.stdout).toContain("-h, --help");
   });
 
-  it.each(["select", "update-bibtex"])("prints subcommand help for %s", (command) => {
+  it.each(["select", "update"])("prints subcommand help for %s", (command) => {
     const result = runCli([command, "--help"]);
 
     expect(result.status).toBe(0);
