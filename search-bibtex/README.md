@@ -31,6 +31,17 @@ search-bibtex/dist-bin/<platform-arch>/search-bibtex.exe
 
 不同平台的可执行文件保持同名，Windows 只是在文件扩展名上不同。
 
+## 构建产物
+
+在 `search-bibtex/` 目录下使用 Makefile 生成二进制产物：
+
+```bash
+make build-binary
+make build-binaries
+```
+
+`make build-binary` 生成当前平台产物，`make build-binaries` 生成全部平台产物。
+
 ## Agent Skill
 
 本项目提供的 skill 文件位于：
@@ -72,7 +83,7 @@ search-bibtex.exe config-defaults
 search-bibtex metadata paper.pdf
 ```
 
-搜索并返回 JSON 候选：
+搜索并在终端进入选择器；重定向时返回 JSON：
 
 ```bash
 search-bibtex search paper.pdf \
