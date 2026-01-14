@@ -21,7 +21,7 @@ Use this skill for the `search-bibtex` binary. The binary is independent of Pape
    search-bibtex metadata <pdf-path>
    ```
 
-3. Search and rank candidates as JSON:
+3. Search and rank candidates. In a TTY, it opens the selector; when piped, it prints JSON:
 
    ```bash
    search-bibtex search <pdf-path> --limit 10 --source-priority dblp,arxiv,crossref,openalex,doi
