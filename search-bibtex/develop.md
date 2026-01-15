@@ -40,6 +40,7 @@ search-bibtex/
     http.ts
     index.ts
     metadata.ts
+    main.ts
     pdf.ts
     pdf-parse-lib.d.ts
     ranking.ts
@@ -114,7 +115,7 @@ stdout BibTeX / JSON
 
 `index.ts` 导出库 API，脚本和未来集成都应从这里导入公共能力。
 
-`scripts/build-binaries.ts` 先用 `esbuild` 把 `src/cli.ts` 收束成单文件 CommonJS bundle，再调用 `pkg` 为多个平台输出可执行文件。打包使用 `--public --no-bytecode`，避免跨架构 V8 bytecode 生成差异。当前目标是：
+`scripts/build-binaries.ts` 先用 `esbuild` 把 `src/main.ts` 收束成单文件 CommonJS bundle，再调用 `pkg` 为多个平台输出可执行文件。打包使用 `--public --no-bytecode`，避免跨架构 V8 bytecode 生成差异。当前目标是：
 
 ```text
 node20-linux-x64
@@ -167,6 +168,8 @@ make test-e2e
 ```
 
 命令参数解析集中在 `cli.ts`。无效来源、无效权重、非法 index 和非 TTY 交互选择都应报错，不要自动改用默认值。
+
+`search` 在 TTY 下会进入选择器，管道或重定向时输出 JSON；`select` 始终走显式选择流程。
 
 ## 测试策略
 
