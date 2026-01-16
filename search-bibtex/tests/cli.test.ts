@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { shouldUseInteractiveSearch } from "../src/cli.js";
+
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 describe("cli help", () => {
@@ -26,8 +28,17 @@ describe("cli help", () => {
   });
 });
 
+describe("interactive search mode", () => {
+  it("uses the interactive selector only when both stdio streams are ttys", () => {
+    expect(shouldUseInteractiveSearch(true, true)).toBe(true);
+    expect(shouldUseInteractiveSearch(true, false)).toBe(false);
+    expect(shouldUseInteractiveSearch(false, true)).toBe(false);
+    expect(shouldUseInteractiveSearch(undefined, true)).toBe(false);
+  });
+});
+
 function runCli(args: string[]): { status: number | null; stdout: string; stderr: string } {
-  return spawnSync(pnpmCommand(), ["exec", "tsx", "src/cli.ts", ...args], {
+  return spawnSync(pnpmCommand(), ["exec", "tsx", "src/main.ts", ...args], {
     cwd: projectDir,
     encoding: "utf8"
   });
