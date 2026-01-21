@@ -11,3 +11,5 @@ export const defaultSearchPreferences: SearchPreferences = {
   },
   limit: 10
 };
+
+export const defaultSearchTimeoutMs = 30_000;
