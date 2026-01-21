@@ -1,5 +1,7 @@
+import { spawnSync } from "node:child_process";
 import readline from "node:readline";
 
+import { formatBibtexText } from "./bibtex.js";
 import type { SearchResult, SearchSourceError } from "./types.js";
 
 export type SelectionMode = "browse" | "filter";
@@ -41,6 +43,11 @@ interface KeypressKey {
   name?: string;
   ctrl?: boolean;
   meta?: boolean;
+}
+
+interface ClipboardResult {
+  copied: boolean;
+  message: string;
 }
 
 const searchIndexCache = new WeakMap<SearchResult, string>();
@@ -216,11 +223,13 @@ export async function runInteractiveSelection(
       output.write("\x1b[2J\x1b[H");
       output.write(renderSelection(results, state, options.sourceErrors, { color: true }));
     };
-    const cleanup = () => {
+    const cleanup = (clearScreen = true) => {
       input.off("keypress", onKeypress);
       input.setRawMode(false);
       input.pause();
-      output.write("\x1b[2J\x1b[H");
+      if (clearScreen) {
+        output.write("\x1b[2J\x1b[H");
+      }
     };
     const onKeypress = (inputText: string, key: KeypressKey) => {
       const event = keypressToSelectionEvent(inputText, key);
@@ -237,7 +246,11 @@ export async function runInteractiveSelection(
 
       if (state.selectedIndex !== undefined) {
         const selected = results[state.selectedIndex];
-        cleanup();
+        const formattedBibtex = formatBibtexText(selected.bibtex);
+        const clipboard = copyTextToClipboard(formattedBibtex);
+        output.write("\x1b[2J\x1b[H");
+        output.write(renderSelectionConfirmation(selected, formattedBibtex, clipboard, true));
+        cleanup(false);
         resolve(selected);
         return;
       }
@@ -302,7 +315,7 @@ export function formatSelectedResult(result: SearchResult, format: "bibtex" | "j
   if (format === "json") {
     return `${JSON.stringify(result, null, 2)}\n`;
   }
-  return `${result.bibtex.trim()}\n`;
+  return `${formatBibtexText(result.bibtex)}\n`;
 }
 
 function clampCursor(cursor: number, visibleCount: number): number {
@@ -364,6 +377,25 @@ function formatBibtexPreview(result: SearchResult, mode: PreviewMode, color = fa
   return lines.map((line) => highlightBibtexLine(line, color));
 }
 
+function renderSelectionConfirmation(
+  result: SearchResult,
+  formattedBibtex: string,
+  clipboard: ClipboardResult,
+  color: boolean
+): string {
+  const clipboardLabel = clipboard.copied
+    ? paint(`Clipboard: ${clipboard.message}`, "1;32", color)
+    : paint(`Clipboard: ${clipboard.message}`, "1;33", color);
+  return [
+    paint("search-bibtex selection confirmed", "1", color),
+    `${styleLabel("Title:", color)} ${result.title}`,
+    `${styleLabel("Source:", color)} ${result.source}  ${styleLabel("Score:", color)} ${result.score.toFixed(3)}`,
+    clipboardLabel,
+    "",
+    ...formattedBibtex.split(/\r?\n/).map((line) => highlightBibtexLine(line, color))
+  ].join("\n");
+}
+
 function formatAuthorPreview(authors: string[], limit = 3): string {
   if (authors.length === 0) {
     return "";
@@ -417,6 +449,44 @@ function styleLabel(value: string, color: boolean): string {
 
 function paint(value: string, code: string, enabled: boolean): string {
   return enabled ? `\u001b[${code}m${value}\u001b[0m` : value;
+}
+
+function copyTextToClipboard(text: string): ClipboardResult {
+  const attempts = clipboardCommands();
+  for (const attempt of attempts) {
+    const result = spawnSync(attempt.command, attempt.args, {
+      input: text,
+      encoding: "utf8",
+      windowsHide: true
+    });
+    if (!result.error && result.status === 0) {
+      return {
+        copied: true,
+        message: `copied via ${attempt.command}`
+      };
+    }
+  }
+
+  return {
+    copied: false,
+    message: "clipboard unavailable"
+  };
+}
+
+function clipboardCommands(): Array<{ command: string; args: string[] }> {
+  if (process.platform === "darwin") {
+    return [{ command: "pbcopy", args: [] }];
+  }
+
+  if (process.platform === "win32") {
+    return [{ command: "clip", args: [] }];
+  }
+
+  return [
+    { command: "wl-copy", args: [] },
+    { command: "xclip", args: ["-selection", "clipboard"] },
+    { command: "xsel", args: ["--clipboard", "--input"] }
+  ];
 }
 
 function wrapPreviewLines(lines: string[], width: number): string[] {
