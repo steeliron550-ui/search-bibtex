@@ -143,6 +143,24 @@ describe("search aggregation", () => {
       { completed: 3, total: 3, completedSources: ["dblp", "crossref"], failedSources: ["semantic-scholar"] }
     ]);
   });
+
+  it("stops serial search when the timeout budget is exhausted", async () => {
+    const response = await searchBibtex(metadata, {
+      fetcher: slowTimeoutFetch,
+      preferences: {
+        sourcePriority: ["dblp", "crossref"],
+        limit: 3
+      },
+      timeoutMs: 10
+    });
+
+    expect(response.results).toEqual([]);
+    expect(response.sourceErrors).toHaveLength(1);
+    expect(response.sourceErrors[0]).toEqual(expect.objectContaining({
+      source: "dblp"
+    }));
+    expect(response.sourceErrors[0].message).toContain("Search timed out after");
+  });
 });
 
 async function fakeFetch(input: RequestInfo | URL): Promise<Response> {
@@ -200,6 +218,26 @@ async function fakeFetch(input: RequestInfo | URL): Promise<Response> {
   }
 
   throw new Error(`Unexpected URL ${url}`);
+}
+
+async function slowTimeoutFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const signal = init?.signal;
+  return await new Promise<Response>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      resolve(jsonResponse({
+        result: {
+          hits: {
+            hit: []
+          }
+        }
+      }));
+    }, 250);
+
+    signal?.addEventListener("abort", () => {
+      clearTimeout(timer);
+      reject(signal.reason ?? new Error("aborted"));
+    }, { once: true });
+  });
 }
 
 function jsonResponse(value: unknown): Response {
