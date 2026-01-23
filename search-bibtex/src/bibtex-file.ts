@@ -29,6 +29,7 @@ export interface BibtexRefinementOptions {
   fetcher?: FetchLike;
   preferences?: SearchPreferenceInput;
   filePath?: string;
+  parallel?: boolean;
   timeoutMs?: number;
 }
 
@@ -93,6 +94,7 @@ export async function refineBibtexDocument(
     const response = await searchBibtex(metadata, {
       fetcher: options.fetcher,
       preferences: options.preferences,
+      parallel: options.parallel,
       timeoutMs: options.timeoutMs
     });
 
