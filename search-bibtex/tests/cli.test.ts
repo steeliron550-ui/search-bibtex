@@ -31,6 +31,7 @@ describe("cli help", () => {
     const result = runCli(["search", "--help"]);
 
     expect(result.status).toBe(0);
+    expect(result.stdout).toContain("--parallel");
     expect(result.stdout).toContain("--timeout <seconds>");
   });
 });
