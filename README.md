@@ -25,15 +25,15 @@
 二进制文件按平台和架构分目录放置：
 
 ```text
-search-bibtex/dist-bin/<platform-arch>/search-bibtex
-search-bibtex/dist-bin/<platform-arch>/search-bibtex.exe
+dist-bin/<platform-arch>/search-bibtex
+dist-bin/<platform-arch>/search-bibtex.exe
 ```
 
 不同平台的可执行文件保持同名，Windows 只是在文件扩展名上不同。
 
 ## 构建产物
 
-在 `search-bibtex/` 目录下使用 Makefile 生成二进制产物：
+在仓库根目录使用 Makefile 生成二进制产物：
 
 ```bash
 make build-binary
@@ -47,8 +47,8 @@ make build-binaries
 本项目提供的 skill 文件位于：
 
 ```text
-search-bibtex/SKILL.md
-search-bibtex/agents/openai.yaml
+SKILL.md
+agents/openai.yaml
 ```
 
 根据实际使用的 agent，把 `SKILL.md` 和需要的 agent 元数据放到对应的 skill 目录。Claude Code、OpenAI Codex、OpenCode 等工具的 skill 目录和加载方式不同，应按各自工具的文档或本地配置放置。

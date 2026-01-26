@@ -2,8 +2,8 @@ refs/
 pdfs/
 node_modules/
 dist/
-search-bibtex/dist-bin/
-search-bibtex/dist-pkg/
+dist-bin/
+dist-pkg/
 coverage/
 .turbo/
 .vite/
