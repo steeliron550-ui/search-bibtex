@@ -157,6 +157,7 @@ make install
 make build
 make build-binary
 make build-binaries
+make clean
 make test
 make typecheck
 make test-e2e
