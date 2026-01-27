@@ -1,6 +1,6 @@
 ---
 name: search-bibtex
-description: Use when the user provides one or more academic PDF files or an existing BibTeX file and wants the search-bibtex binary to extract metadata, fuzzy-search bibliographic sources, refresh BibTeX, rank candidates with configurable source priority, and present an interactive Vim-key selection UI. Handles computer science preprints, conference papers, and journal papers through an independent CLI; does not depend on Paperlib.
+description: Use when the user provides one or more academic PDF files or an existing BibTeX file and wants the search-bibtex binary to extract metadata, fuzzy-search bibliographic sources, refresh BibTeX, rank candidates with configurable source priority, load defaults from config.toml, and present an interactive Vim-key selection UI. Handles computer science preprints, conference papers, and journal papers through an independent CLI; does not depend on Paperlib.
 ---
 
 # Search BibTeX
@@ -28,6 +28,7 @@ Use this skill for the `search-bibtex` binary. The binary is independent of Pape
    ```
 
    Parallel source search is on by default; use `--no-parallel` only if the user wants serial lookup.
+   If the user has a config file, pass `--config <path>` and let CLI flags override it.
 
 4. Let the user choose a BibTeX entry:
 
@@ -42,6 +43,8 @@ Use this skill for the `search-bibtex` binary. The binary is independent of Pape
    ```bash
    search-bibtex update <bibtex-path> --in-place
    ```
+
+   The `update` command also honors `--config <path>` and custom source definitions.
 
 6. For non-interactive use, select by ranked index:
 
@@ -68,6 +71,8 @@ Use `--weights` when the user wants ranking behavior changed:
 ```bash
 --weights title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05
 ```
+
+`search-bibtex config-template` prints a TOML starter file. Config files can add custom HTTP sources and include their names in `source_priority`.
 
 ## Interaction
 
