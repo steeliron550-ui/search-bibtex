@@ -1,12 +1,14 @@
 import { XMLParser } from "fast-xml-parser";
 
 import { fetchBibtexForRecord } from "./bibtex.js";
-import { defaultSearchPreferences, defaultSearchTimeoutMs } from "./config.js";
+import { defaultSearchPreferences, defaultSearchTimeoutMs, type CustomSourceConfig } from "./config.js";
+import { createCustomSearchSource } from "./custom-source.js";
 import type { FetchLike } from "./http.js";
 import { fetchJson, fetchText, toSourceError } from "./http.js";
 import { buildMetadataCandidate, generateSearchQueries, normalizeWhitespace, stripArxivVersion } from "./metadata.js";
 import { extractPdfDocumentSnapshot } from "./pdf.js";
 import { type BibliographicCandidate, rankBibliographicCandidates } from "./ranking.js";
+import type { SearchSource, SearchSourceRegistry, SourceSearchContext } from "./source.js";
 import type {
   PaperSource,
   PdfMetadataCandidate,
@@ -21,6 +23,8 @@ import type {
 export interface BibliographySearchOptions {
   fetcher?: FetchLike;
   preferences?: SearchPreferenceInput;
+  customSources?: CustomSourceConfig[];
+  sourceRegistry?: SearchSourceRegistry;
   pages?: number;
   onProgress?: (event: SearchProgressEvent) => void;
   parallel?: boolean;
@@ -40,14 +44,6 @@ export interface SearchPreferenceInput {
   limit?: number;
 }
 
-interface SourceSearchContext {
-  metadata: PdfMetadataCandidate;
-  queries: SearchQueryCandidate[];
-  fetcher: FetchLike;
-  signal?: AbortSignal;
-  limit: number;
-}
-
 const xmlParser = new XMLParser({
   attributeNamePrefix: "",
   ignoreAttributes: false,
@@ -64,7 +60,9 @@ export async function searchBibtex(
   metadata: PdfMetadataCandidate,
   options: BibliographySearchOptions = {}
 ): Promise<SearchResponse> {
+  const sourceRegistry = options.sourceRegistry ?? createSearchSourceRegistry(options.customSources);
   const preferences = mergeSearchPreferences(options.preferences);
+  assertRegisteredSources(preferences.sourcePriority, sourceRegistry);
   const parallel = options.parallel ?? true;
   const timeoutMs = options.timeoutMs ?? defaultSearchTimeoutMs;
   if (parallel) {
@@ -74,7 +72,8 @@ export async function searchBibtex(
       generateSearchQueries(metadata),
       options.fetcher ?? fetch,
       options.onProgress,
-      timeoutMs
+      timeoutMs,
+      sourceRegistry
     );
   }
 
@@ -98,7 +97,7 @@ export async function searchBibtex(
 
     for (const source of preferences.sourcePriority) {
       try {
-        candidates.push(...await searchSource(source, { metadata, queries, fetcher, signal: timeout.signal, limit: preferences.limit }));
+        candidates.push(...await searchSource(source, sourceRegistry, { metadata, queries, fetcher, signal: timeout.signal, limit: preferences.limit }));
         completedSources.push(source);
       } catch (error) {
         failedSources.push(source);
@@ -124,7 +123,7 @@ export async function searchBibtex(
     if (!timedOut) {
       for (const candidate of ranked) {
         try {
-          const bibtex = await fetchBibtexForRecord(candidate, fetcher, { signal: timeout.signal });
+          const bibtex = await fetchBibtexForCandidate(candidate, sourceRegistry, fetcher, { signal: timeout.signal });
           results.push({ ...candidate, bibtex });
           if (results.length >= preferences.limit) {
             break;
@@ -163,13 +162,34 @@ export function mergeSearchPreferences(
   };
 }
 
+export function createSearchSourceRegistry(customSources: CustomSourceConfig[] = []): SearchSourceRegistry {
+  const registry: SearchSourceRegistry = new Map();
+
+  for (const source of builtinSearchSources) {
+    registry.set(source.name, source);
+  }
+
+  for (const customSource of customSources) {
+    if (!customSource.enabled) {
+      continue;
+    }
+    if (registry.has(customSource.name)) {
+      throw new Error(`Duplicate search source: ${customSource.name}`);
+    }
+    registry.set(customSource.name, createCustomSearchSource(customSource));
+  }
+
+  return registry;
+}
+
 async function searchBibtexParallel(
   metadata: PdfMetadataCandidate,
   preferences: SearchPreferences,
   queries: SearchQueryCandidate[],
   fetcher: FetchLike,
   onProgress: BibliographySearchOptions["onProgress"],
-  timeoutMs: number
+  timeoutMs: number,
+  sourceRegistry: SearchSourceRegistry
 ): Promise<SearchResponse> {
   const candidatesBySource: Array<BibliographicCandidate[] | undefined> = new Array(preferences.sourcePriority.length);
   const sourceErrorsBySource: Array<SearchSourceError | undefined> = new Array(preferences.sourcePriority.length);
@@ -186,7 +206,7 @@ async function searchBibtexParallel(
   await Promise.all(preferences.sourcePriority.map(async (source, index) => {
     const timeout = createSearchTimeoutController(timeoutMs);
     try {
-      candidatesBySource[index] = await searchSource(source, {
+      candidatesBySource[index] = await searchSource(source, sourceRegistry, {
         metadata,
         queries,
         fetcher,
@@ -220,7 +240,7 @@ async function searchBibtexParallel(
   await Promise.all(ranked.map(async (candidate, index) => {
     const timeout = createSearchTimeoutController(timeoutMs);
     try {
-      const bibtex = await fetchBibtexForRecord(candidate, fetcher, { signal: timeout.signal });
+      const bibtex = await fetchBibtexForCandidate(candidate, sourceRegistry, fetcher, { signal: timeout.signal });
       resultsByIndex[index] = { ...candidate, bibtex };
     } catch (error) {
       bibtexErrorsByIndex[index] = toSourceError(candidate.source, candidate.title, error);
@@ -262,22 +282,46 @@ function orderedSourceList(order: PaperSource[], sources: PaperSource[]): PaperS
   return order.filter((source) => sources.includes(source));
 }
 
-async function searchSource(source: PaperSource, context: SourceSearchContext): Promise<BibliographicCandidate[]> {
-  switch (source) {
-    case "arxiv":
-      return searchArxiv(context);
-    case "crossref":
-      return searchCrossref(context);
-    case "semantic-scholar":
-      return searchSemanticScholar(context);
-    case "openalex":
-      return searchOpenAlex(context);
-    case "dblp":
-      return searchDblp(context);
-    case "doi":
-      return searchDoi(context.metadata);
+async function searchSource(
+  source: PaperSource,
+  sourceRegistry: SearchSourceRegistry,
+  context: SourceSearchContext
+): Promise<BibliographicCandidate[]> {
+  const registeredSource = sourceRegistry.get(source);
+  if (!registeredSource) {
+    throw new Error(`Unknown search source: ${source}`);
+  }
+  return registeredSource.search(context);
+}
+
+async function fetchBibtexForCandidate(
+  candidate: BibliographicCandidate,
+  sourceRegistry: SearchSourceRegistry,
+  fetcher: FetchLike,
+  options: { signal?: AbortSignal }
+): Promise<string> {
+  const registeredSource = sourceRegistry.get(candidate.source);
+  if (registeredSource?.fetchBibtex) {
+    return registeredSource.fetchBibtex(candidate, { fetcher, signal: options.signal });
+  }
+  return fetchBibtexForRecord(candidate, fetcher, options);
+}
+
+function assertRegisteredSources(sourcePriority: PaperSource[], sourceRegistry: SearchSourceRegistry): void {
+  const unknown = sourcePriority.filter((source) => !sourceRegistry.has(source));
+  if (unknown.length > 0) {
+    throw new Error(`Unknown source(s): ${unknown.join(", ")}`);
   }
 }
+
+const builtinSearchSources: SearchSource[] = [
+  { name: "arxiv", search: searchArxiv },
+  { name: "crossref", search: searchCrossref },
+  { name: "semantic-scholar", search: searchSemanticScholar },
+  { name: "openalex", search: searchOpenAlex },
+  { name: "dblp", search: searchDblp },
+  { name: "doi", search: async (context) => searchDoi(context.metadata) }
+];
 
 async function searchDblp(context: SourceSearchContext): Promise<BibliographicCandidate[]> {
   const query = context.metadata.doi ? `doi:${context.metadata.doi}` : context.metadata.title ?? context.queries[0].value;
