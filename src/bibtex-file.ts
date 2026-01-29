@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { FetchLike } from "./http.js";
+import type { CustomSourceConfig } from "./config.js";
 import { extractArxivId, extractDoi, normalizeWhitespace } from "./metadata.js";
 import { searchBibtex, type SearchPreferenceInput } from "./search.js";
 import type { PdfMetadataCandidate, SearchResult, SearchSourceError } from "./types.js";
@@ -28,6 +29,7 @@ export interface ParsedBibtexEntry {
 export interface BibtexRefinementOptions {
   fetcher?: FetchLike;
   preferences?: SearchPreferenceInput;
+  customSources?: CustomSourceConfig[];
   filePath?: string;
   parallel?: boolean;
   timeoutMs?: number;
@@ -94,6 +96,7 @@ export async function refineBibtexDocument(
     const response = await searchBibtex(metadata, {
       fetcher: options.fetcher,
       preferences: options.preferences,
+      customSources: options.customSources,
       parallel: options.parallel,
       timeoutMs: options.timeoutMs
     });
