@@ -1,4 +1,16 @@
-export { defaultSearchPreferences } from "./config.js";
+export {
+  ConfigError,
+  defaultConfigToml,
+  defaultSearchParallel,
+  defaultSearchPreferences,
+  defaultSearchTimeoutMs,
+  defaultSearchTimeoutSeconds,
+  loadConfig,
+  loadResolvedAppConfig,
+  resolveAppConfig,
+  resolveConfigPath,
+  validateSourcePriority
+} from "./config.js";
 export {
   fetchBibtexForRecord,
   fetchDblpBibtex,
@@ -36,6 +48,7 @@ export {
   mergeSearchPreferences,
   normalizeArxivFeed,
   normalizeDblpHits,
+  createSearchSourceRegistry,
   searchBibtex,
   searchBibtexFromPdf
 } from "./search.js";
@@ -52,4 +65,17 @@ export type {
   SearchSourceError,
   SortWeights
 } from "./types.js";
+export type {
+  AppConfig,
+  CustomSourceBibtexConfig,
+  CustomSourceConfig,
+  CustomSourceFieldMap,
+  CustomSourceResponseConfig,
+  CustomSourceSearchConfig,
+  LoadConfigOptions,
+  LoadedAppConfig,
+  ResolvedAppConfig,
+  ResolvedSearchConfig
+} from "./config.js";
+export type { SearchSource, SearchSourceRegistry, SourceBibtexContext, SourceSearchContext } from "./source.js";
 export type { SelectionEvent, SelectionState, SelectionMode } from "./selection.js";
