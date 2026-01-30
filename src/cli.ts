@@ -3,7 +3,12 @@ import { Command } from "commander";
 import { writeFile } from "node:fs/promises";
 
 import { refineBibtexFile } from "./bibtex-file.js";
-import { defaultSearchPreferences, defaultSearchTimeoutMs } from "./config.js";
+import {
+  defaultConfigToml,
+  defaultSearchPreferences,
+  loadResolvedAppConfig,
+  type ResolvedAppConfig
+} from "./config.js";
 import { buildMetadataCandidate, generateSearchQueries } from "./metadata.js";
 import { extractPdfDocumentSnapshot } from "./pdf.js";
 import { searchBibtexFromPdf } from "./search.js";
@@ -12,7 +17,7 @@ import {
   runInteractiveSelection,
   selectedResultByIndex
 } from "./selection.js";
-import type { PaperSource, SortWeights } from "./types.js";
+import { builtinPaperSources, type PaperSource, type SearchPreferences, type SortWeights } from "./types.js";
 
 export function createProgram(): Command {
   const program = new Command();
@@ -28,6 +33,13 @@ export function createProgram(): Command {
     .description("Print the default search ranking preferences as JSON.")
     .action(() => {
       process.stdout.write(`${JSON.stringify(defaultSearchPreferences, null, 2)}\n`);
+    });
+
+  program
+    .command("config-template")
+    .description("Print a TOML configuration template with the built-in defaults.")
+    .action(() => {
+      process.stdout.write(`${defaultConfigToml}\n`);
     });
 
   program
@@ -47,6 +59,7 @@ export function createProgram(): Command {
     .command("search")
     .description("Extract local PDF metadata, search bibliographic sources, rank candidates, and choose interactively in a TTY.")
     .argument("<pdf>", "Path to a local PDF file.")
+    .option("-c, --config <path>", "Path to a config.toml file.")
     .option("-p, --pages <count>", "Number of leading pages to inspect.", parsePositiveInteger, 2)
     .option("-l, --limit <count>", "Maximum ranked BibTeX candidates to return.", parsePositiveInteger)
     .option(
@@ -59,22 +72,15 @@ export function createProgram(): Command {
     )
     .option("--parallel", "Search sources in parallel.")
     .option("--no-parallel", "Search sources serially.")
-    .option(
-      "-t, --timeout <seconds>",
-      "Maximum search stage duration in seconds.",
-      parsePositiveInteger,
-      Math.round(defaultSearchTimeoutMs / 1000)
-    )
+    .option("-t, --timeout <seconds>", "Maximum search stage duration in seconds.", parsePositiveInteger)
     .action(async (pdf: string, options: SearchCommandOptions) => {
+      const config = await loadResolvedAppConfig({ configPath: options.config });
       const response = await searchBibtexFromPdf(pdf, {
         pages: options.pages,
-        parallel: options.parallel ?? true,
-        timeoutMs: options.timeout * 1000,
-        preferences: {
-          limit: options.limit,
-          sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
-          weights: options.weights ? parseWeights(options.weights) : undefined
-        },
+        parallel: options.parallel ?? config.search.parallel,
+        timeoutMs: (options.timeout ?? config.search.timeoutSeconds) * 1000,
+        preferences: buildSearchPreferences(options, config),
+        customSources: config.sources,
         onProgress: createSearchProgressReporter("search")
       });
 
@@ -97,6 +103,7 @@ export function createProgram(): Command {
     .command("update")
     .description("Refresh an existing BibTeX file by fuzzy-matching titles and preserving citation keys.")
     .argument("<bibtex>", "Path to a local BibTeX file.")
+    .option("-c, --config <path>", "Path to a config.toml file.")
     .option("-o, --output <path>", "Write the updated BibTeX to a file.")
     .option("-i, --in-place", "Overwrite the input BibTeX file.")
     .option("-l, --limit <count>", "Maximum ranked BibTeX candidates to return.", parsePositiveInteger)
@@ -110,25 +117,18 @@ export function createProgram(): Command {
     )
     .option("--parallel", "Search sources in parallel.")
     .option("--no-parallel", "Search sources serially.")
-    .option(
-      "-t, --timeout <seconds>",
-      "Maximum search stage duration in seconds.",
-      parsePositiveInteger,
-      Math.round(defaultSearchTimeoutMs / 1000)
-    )
+    .option("-t, --timeout <seconds>", "Maximum search stage duration in seconds.", parsePositiveInteger)
     .action(async (bibtexPath: string, options: UpdateBibtexCommandOptions) => {
       if (options.output && options.inPlace) {
         throw new Error("Use either --output or --in-place, not both.");
       }
 
+      const config = await loadResolvedAppConfig({ configPath: options.config });
       const result = await refineBibtexFile(bibtexPath, {
-        preferences: {
-          limit: options.limit,
-          sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
-          weights: options.weights ? parseWeights(options.weights) : undefined
-        },
-        parallel: options.parallel ?? true,
-        timeoutMs: options.timeout * 1000
+        preferences: buildSearchPreferences(options, config),
+        customSources: config.sources,
+        parallel: options.parallel ?? config.search.parallel,
+        timeoutMs: (options.timeout ?? config.search.timeoutSeconds) * 1000
       });
 
       if (result.sourceErrors.length > 0) {
@@ -152,6 +152,7 @@ export function createProgram(): Command {
     .command("select")
     .description("Search a local PDF and choose one BibTeX candidate interactively or by index.")
     .argument("<pdf>", "Path to a local PDF file.")
+    .option("-c, --config <path>", "Path to a config.toml file.")
     .option("-p, --pages <count>", "Number of leading pages to inspect.", parsePositiveInteger, 2)
     .option("-l, --limit <count>", "Maximum ranked BibTeX candidates to return.", parsePositiveInteger)
     .option("--select-index <index>", "Choose a result by 0-based index without interactive UI.", parseNonNegativeInteger)
@@ -171,22 +172,15 @@ export function createProgram(): Command {
     )
     .option("--parallel", "Search sources in parallel.")
     .option("--no-parallel", "Search sources serially.")
-    .option(
-      "-t, --timeout <seconds>",
-      "Maximum search stage duration in seconds.",
-      parsePositiveInteger,
-      Math.round(defaultSearchTimeoutMs / 1000)
-    )
+    .option("-t, --timeout <seconds>", "Maximum search stage duration in seconds.", parsePositiveInteger)
     .action(async (pdf: string, options: SelectCommandOptions) => {
+      const config = await loadResolvedAppConfig({ configPath: options.config });
       const response = await searchBibtexFromPdf(pdf, {
         pages: options.pages,
-        parallel: options.parallel ?? true,
-        timeoutMs: options.timeout * 1000,
-        preferences: {
-          limit: options.limit,
-          sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
-          weights: options.weights ? parseWeights(options.weights) : undefined
-        },
+        parallel: options.parallel ?? config.search.parallel,
+        timeoutMs: (options.timeout ?? config.search.timeoutSeconds) * 1000,
+        preferences: buildSearchPreferences(options, config),
+        customSources: config.sources,
         onProgress: createSearchProgressReporter("select")
       });
 
@@ -229,12 +223,13 @@ function parseNonNegativeInteger(value: string): number {
 }
 
 interface SearchCommandOptions {
+  config?: string;
   pages: number;
   limit?: number;
   sourcePriority?: string;
   weights?: string;
   parallel?: boolean;
-  timeout: number;
+  timeout?: number;
 }
 
 interface SelectCommandOptions extends SearchCommandOptions {
@@ -247,9 +242,26 @@ interface UpdateBibtexCommandOptions extends SearchCommandOptions {
   inPlace?: boolean;
 }
 
-function parseSourcePriority(value: string): PaperSource[] {
+function buildSearchPreferences(options: SearchCommandOptions, config: ResolvedAppConfig): SearchPreferences {
+  const knownSources = new Set<PaperSource>([
+    ...builtinPaperSources,
+    ...config.sources.map((source) => source.name)
+  ]);
+
+  return {
+    limit: options.limit ?? config.search.limit,
+    sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority, knownSources) : config.search.sourcePriority,
+    weights: options.weights
+      ? {
+        ...config.search.weights,
+        ...parseWeights(options.weights)
+      }
+      : config.search.weights
+  };
+}
+
+function parseSourcePriority(value: string, knownSources: ReadonlySet<PaperSource>): PaperSource[] {
   const sources = value.split(",").map((source) => source.trim()).filter(Boolean);
-  const knownSources = new Set(defaultSearchPreferences.sourcePriority);
   const unknown = sources.filter((source) => !knownSources.has(source as PaperSource));
   if (unknown.length > 0) {
     throw new Error(`Unknown source(s): ${unknown.join(", ")}`);
