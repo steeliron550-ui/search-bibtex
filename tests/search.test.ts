@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { generateBibtex } from "../src/bibtex.js";
-import { defaultSearchPreferences } from "../src/config.js";
+import { defaultSearchPreferences, type CustomSourceConfig } from "../src/config.js";
 import { rankBibliographicCandidates } from "../src/ranking.js";
 import { normalizeArxivFeed, normalizeDblpHits, searchBibtex } from "../src/search.js";
 import type { PdfMetadataCandidate } from "../src/types.js";
@@ -179,6 +179,55 @@ describe("search aggregation", () => {
     }));
     expect(response.sourceErrors[0].message).toContain("Search timed out after");
   });
+
+  it("searches a custom HTTP source and fetches BibTeX from a template URL", async () => {
+    const customSource: CustomSourceConfig = {
+      name: "acm-custom",
+      kind: "http-json",
+      enabled: true,
+      search: {
+        url: "https://example.test/search?query={title}&limit={limit}"
+      },
+      response: {
+        itemsPath: "items",
+        fields: {
+          sourceId: "id",
+          title: "title",
+          authors: "authors",
+          year: "year",
+          doi: "doi",
+          arxivId: "arxiv",
+          venue: "venue",
+          url: "url"
+        }
+      },
+      bibtex: {
+        strategy: "url",
+        urlTemplate: "https://example.test/bibtex/{sourceId}",
+        accept: "application/x-bibtex"
+      }
+    };
+
+    const response = await searchBibtex({
+      ...metadata,
+      title: "Custom Source Paper"
+    }, {
+      fetcher: customSourceFetch,
+      preferences: {
+        sourcePriority: ["acm-custom"],
+        limit: 1
+      },
+      customSources: [customSource]
+    });
+
+    expect(response.results).toHaveLength(1);
+    expect(response.results[0]).toMatchObject({
+      source: "acm-custom",
+      sourceId: "acm-123",
+      title: "Custom Source Paper"
+    });
+    expect(response.results[0].bibtex).toBe("@article{CustomSourcePaper2024Custom}");
+  });
 });
 
 async function fakeFetch(input: RequestInfo | URL): Promise<Response> {
@@ -256,6 +305,34 @@ async function slowTimeoutFetch(input: RequestInfo | URL, init?: RequestInit): P
       reject(signal.reason ?? new Error("aborted"));
     }, { once: true });
   });
+}
+
+async function customSourceFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  void init;
+  const url = String(input);
+
+  if (url === "https://example.test/search?query=Custom%20Source%20Paper&limit=1") {
+    return jsonResponse({
+      items: [{
+        id: "acm-123",
+        title: "Custom Source Paper",
+        authors: ["A. Author", "B. Author"],
+        year: 2024,
+        doi: "10.1145/example",
+        venue: "ACM Test",
+        url: "https://example.test/paper/acm-123"
+      }]
+    });
+  }
+
+  if (url === "https://example.test/bibtex/acm-123") {
+    return new Response("@article{CustomSourcePaper2024Custom}", {
+      status: 200,
+      headers: { "content-type": "application/x-bibtex" }
+    });
+  }
+
+  throw new Error(`Unexpected URL ${url}`);
 }
 
 let parallelFetches = 0;
