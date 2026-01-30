@@ -12,6 +12,7 @@
 - DBLP 是一等信息源，支持 publication search API 和单条记录 `.bib` 抓取。
 - 支持来源优先级、字段打分权重和返回数量配置。
 - 支持 POSIX 风格 `config.toml`，并允许新增声明式 HTTP 搜索源。
+- 支持直接输入论文标题字符串，或从 stdin 读取并按分号拆分多个标题。
 - 交互式候选选择支持类 Vim 键位，也支持非交互脚本化选择。
 - 支持从现有 `.bib` 文件提取标题并更新条目，同时保留原始 citation key。
 - 失败会显式报错或出现在 `sourceErrors` 中，不提供模拟成功结果。
@@ -133,6 +134,15 @@ search-bibtex update pdfs/test.bib --output updated.bib
 ```
 
 搜索阶段默认超时 30 秒，可用 `--timeout` 调整。
+
+从标题字符串搜索，多个标题默认用英文分号分隔：
+
+```bash
+search-bibtex search-title "Self-Instruct: Aligning Language Models with Self-Generated Instructions; DFlash: Block Diffusion for Flash Speculative Decoding"
+printf 'Self-Instruct: Aligning Language Models with Self-Generated Instructions; DFlash: Block Diffusion for Flash Speculative Decoding' | search-bibtex search-title
+```
+
+`search-title` 会读取 stdin，或接受命令行里的标题字符串。用 `--delimiter` 可以改分隔符。
 
 ## 配置文件
 
