@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { shouldUseInteractiveSearch } from "../src/cli.js";
+import { shouldUseInteractiveSearch, splitDelimitedValues } from "../src/cli.js";
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -17,6 +17,7 @@ describe("cli help", () => {
     expect(result.stdout).toContain("Usage: search-bibtex [options] [command]");
     expect(result.stdout).toContain("-h, --help");
     expect(result.stdout).toContain("config-template");
+    expect(result.stdout).toContain("search-title");
   });
 
   it.each(["select", "update"])("prints subcommand help for %s", (command) => {
@@ -46,6 +47,15 @@ describe("cli help", () => {
     expect(result.stdout).toContain("[search]");
     expect(result.stdout).toContain("source_priority");
   });
+
+  it("prints search-title help with delimiter guidance", () => {
+    const result = runCli(["search-title", "--help"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("--delimiter <delimiter>");
+    expect(result.stdout).toContain("Default: ';'");
+    expect(result.stdout).toContain("stdin");
+  });
 });
 
 describe("interactive search mode", () => {
@@ -54,6 +64,16 @@ describe("interactive search mode", () => {
     expect(shouldUseInteractiveSearch(true, false)).toBe(false);
     expect(shouldUseInteractiveSearch(false, true)).toBe(false);
     expect(shouldUseInteractiveSearch(undefined, true)).toBe(false);
+  });
+});
+
+describe("title splitting", () => {
+  it("splits semicolon-delimited title strings by default", () => {
+    expect(splitDelimitedValues("Paper A; Paper B;Paper C")).toEqual([
+      "Paper A",
+      "Paper B",
+      "Paper C"
+    ]);
   });
 });
 
