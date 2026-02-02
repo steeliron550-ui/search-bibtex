@@ -23,8 +23,8 @@ clean:
 	find "$(APP_DIR)" -maxdepth 1 -name '*.tsbuildinfo' -delete
 
 prepare-test-dirs:
-	@mkdir -p "$(APP_DIR)/refs" "$(APP_DIR)/pdfs"
-	@for dir in refs pdfs; do \
+	@mkdir -p "$(APP_DIR)/tests/pdfs"
+	@for dir in tests/pdfs; do \
 		if [ -z "$$(find "$(APP_DIR)/$$dir" -mindepth 1 -print -quit)" ]; then \
 			printf '%s\n' "Warning: $$dir/ is empty; place test files there before running tests." >&2; \
 		fi; \
