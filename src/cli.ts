@@ -9,9 +9,9 @@ import {
   loadResolvedAppConfig,
   type ResolvedAppConfig
 } from "./config.js";
-import { buildMetadataCandidate, generateSearchQueries } from "./metadata.js";
+import { buildMetadataCandidate, buildTitleMetadataCandidate, generateSearchQueries } from "./metadata.js";
 import { extractPdfDocumentSnapshot } from "./pdf.js";
-import { searchBibtexFromPdf } from "./search.js";
+import { searchBibtex, searchBibtexFromPdf } from "./search.js";
 import {
   formatSelectedResult,
   runInteractiveSelection,
@@ -203,6 +203,76 @@ export function createProgram(): Command {
       process.stdout.write(formatSelectedResult(selected, options.format));
     });
 
+  program
+    .command("search-title")
+    .description("Search bibliographic sources from title strings instead of PDFs. Multiple titles in one input are split by ';' by default, and stdin is accepted when no title is passed.")
+    .argument("[titles...]", "Paper title string(s), or '-' to read from stdin.")
+    .option("-c, --config <path>", "Path to a config.toml file.")
+    .option("-l, --limit <count>", "Maximum ranked BibTeX candidates to return.", parsePositiveInteger)
+    .option(
+      "--source-priority <sources>",
+      "Comma-separated source priority, e.g. dblp,arxiv,crossref,openalex,doi."
+    )
+    .option(
+      "--weights <weights>",
+      "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
+    )
+    .option("--parallel", "Search sources in parallel.")
+    .option("--no-parallel", "Search sources serially.")
+    .option("-t, --timeout <seconds>", "Maximum search stage duration in seconds.", parsePositiveInteger)
+    .option("-d, --delimiter <delimiter>", "Delimiter for multiple title strings in one input. Default: ';'.", ";")
+    .action(async (titles: string[] | undefined, options: TitleSearchCommandOptions) => {
+      const config = await loadResolvedAppConfig({ configPath: options.config });
+      const titleInputs = await collectTitleInputs(titles ?? [], options.delimiter);
+      if (titleInputs.length === 0) {
+        throw new Error("Provide at least one title string or pipe title text on stdin.");
+      }
+
+      if (titleInputs.length === 1) {
+        const response = await searchBibtex(buildTitleMetadataCandidate(titleInputs[0]), {
+          parallel: options.parallel ?? config.search.parallel,
+          timeoutMs: (options.timeout ?? config.search.timeoutSeconds) * 1000,
+          preferences: buildSearchPreferences(options, config),
+          customSources: config.sources,
+          onProgress: createSearchProgressReporter("search-title")
+        });
+
+        if (response.results.length === 0 && response.sourceErrors.length > 0) {
+          throw new Error(`Search returned no results for title ${titleInputs[0]}. Source errors: ${JSON.stringify(response.sourceErrors)}`);
+        }
+
+        if (shouldUseInteractiveSearch() && response.results.length > 1) {
+          const selected = await runInteractiveSelection(response.results, { sourceErrors: response.sourceErrors });
+          if (!selected) {
+            return;
+          }
+          return;
+        }
+
+        process.stdout.write(`${JSON.stringify(response, null, 2)}\n`);
+        return;
+      }
+
+      const responses = [];
+      for (const [index, title] of titleInputs.entries()) {
+        const response = await searchBibtex(buildTitleMetadataCandidate(title, `stdin:title:${index + 1}`), {
+          parallel: options.parallel ?? config.search.parallel,
+          timeoutMs: (options.timeout ?? config.search.timeoutSeconds) * 1000,
+          preferences: buildSearchPreferences(options, config),
+          customSources: config.sources,
+          onProgress: createSearchProgressReporter(`search-title[${index + 1}]`)
+        });
+
+        if (response.results.length === 0 && response.sourceErrors.length > 0) {
+          throw new Error(`Search returned no results for title ${title}. Source errors: ${JSON.stringify(response.sourceErrors)}`);
+        }
+
+        responses.push({ title, response });
+      }
+
+      process.stdout.write(`${JSON.stringify({ titles: responses }, null, 2)}\n`);
+    });
+
   return program;
 }
 
@@ -222,9 +292,42 @@ function parseNonNegativeInteger(value: string): number {
   return parsed;
 }
 
-interface SearchCommandOptions {
+export function splitDelimitedValues(value: string, delimiter = ";"): string[] {
+  if (delimiter === "") {
+    throw new Error("Delimiter cannot be empty.");
+  }
+  return value
+    .split(delimiter)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+}
+
+async function collectTitleInputs(values: string[], delimiter: string): Promise<string[]> {
+  const stdinText = values.length === 0 && !process.stdin.isTTY
+    ? await readStdinText()
+    : values.includes("-")
+      ? await readStdinText()
+      : undefined;
+
+  const resolvedValues = values.length === 0 && stdinText !== undefined
+    ? [stdinText]
+    : values.map((value) => (value === "-" && stdinText !== undefined ? stdinText : value));
+
+  return resolvedValues.flatMap((value) => splitDelimitedValues(value, delimiter));
+}
+
+async function readStdinText(): Promise<string> {
+  const chunks: Buffer[] = [];
+
+  for await (const chunk of process.stdin) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+interface SearchExecutionOptions {
   config?: string;
-  pages: number;
   limit?: number;
   sourcePriority?: string;
   weights?: string;
@@ -232,17 +335,25 @@ interface SearchCommandOptions {
   timeout?: number;
 }
 
+interface SearchCommandOptions extends SearchExecutionOptions {
+  pages: number;
+}
+
 interface SelectCommandOptions extends SearchCommandOptions {
   selectIndex?: number;
   format: "bibtex" | "json";
 }
 
-interface UpdateBibtexCommandOptions extends SearchCommandOptions {
+interface UpdateBibtexCommandOptions extends SearchExecutionOptions {
   output?: string;
   inPlace?: boolean;
 }
 
-function buildSearchPreferences(options: SearchCommandOptions, config: ResolvedAppConfig): SearchPreferences {
+interface TitleSearchCommandOptions extends SearchExecutionOptions {
+  delimiter: string;
+}
+
+function buildSearchPreferences(options: SearchExecutionOptions, config: ResolvedAppConfig): SearchPreferences {
   const knownSources = new Set<PaperSource>([
     ...builtinPaperSources,
     ...config.sources.map((source) => source.name)
