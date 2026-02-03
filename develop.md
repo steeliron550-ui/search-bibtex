@@ -176,15 +176,15 @@ make test-e2e
 
 ## 测试策略
 
-端到端测试访问真实网络和根目录 `pdfs/` 样本：
+端到端测试访问真实网络和 `tests/pdfs/` 样本；目录为空时会跳过这部分测试：
 
 ```bash
 make test-e2e
 ```
 
-`scripts/e2e-pdfs.ts` 使用三个本地 PDF 样本，执行 PDF 解析、搜索、排序、`--select-index 0` 等价选择和 BibTeX 首行校验。该测试会因为网络源错误而失败。
+`scripts/e2e-pdfs.ts` 使用三个本地 PDF 样本，执行 PDF 解析、搜索、排序、`--select-index 0` 等价选择和 BibTeX 首行校验。该测试会因为网络源错误而失败，`tests/pdfs/` 为空时会直接跳过。
 
-`tests/bibtex-file.test.ts` 覆盖 BibTeX 文档解析和更新逻辑，使用 `pdfs/test.bib` 的格式作为解析样本，并通过 fake fetcher 验证 citation key 保持不变。
+`tests/bibtex-file.test.ts` 覆盖 BibTeX 文档解析和更新逻辑，使用 `tests/bibtex/acl_test.bib` 作为解析样本，并通过 fake fetcher 验证 citation key 保持不变。
 
 ## 二进制产物检查
 
@@ -241,4 +241,4 @@ git diff
 git status --short --branch
 ```
 
-根目录 `.gitignore` 已忽略 `refs/`、`pdfs/`、`node_modules/`、`dist/`、`dist-bin/`、`dist-pkg/` 和覆盖率产物。`pdfs/` 是本地测试输入，不应提交。
+根目录 `.gitignore` 已忽略 `refs/`、`pdfs/`、`node_modules/`、`dist/`、`dist-bin/`、`dist-pkg/` 和覆盖率产物。
