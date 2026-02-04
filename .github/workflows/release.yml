@@ -1,0 +1,78 @@
+name: release
+
+on:
+  workflow_run:
+    workflows:
+      - build-binaries
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: publish release
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+      RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Download build artifacts
+        run: gh run download "$RUN_ID" -n "search-bibtex-binaries-$RUN_SHA" -D release-input
+
+      - name: Package release assets
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          dist_bin_root="$(find release-input -type d -name dist-bin -print -quit)"
+          if [ -z "$dist_bin_root" ]; then
+            echo "dist-bin directory was not found in the downloaded build artifact." >&2
+            exit 1
+          fi
+
+          release_dir="release-artifacts"
+          mkdir -p "$release_dir"
+
+          for binary_dir in "$dist_bin_root"/*; do
+            [ -d "$binary_dir" ] || continue
+            platform="$(basename "$binary_dir")"
+            archive="$release_dir/search-bibtex-${platform}.tar.gz"
+            tar -czf "$archive" -C "$binary_dir" .
+          done
+
+          ls -1 "$release_dir"
+
+      - name: Publish release
+        run: |
+          set -euo pipefail
+
+          release_tag="main-latest"
+          release_title="Latest main"
+          release_notes="Automated release for main branch commit ${RUN_SHA}."
+
+          if gh release view "$release_tag" >/dev/null 2>&1; then
+            gh release edit "$release_tag" \
+              --target "$RUN_SHA" \
+              --title "$release_title" \
+              --notes "$release_notes" \
+              --latest
+          else
+            gh release create "$release_tag" \
+              --target "$RUN_SHA" \
+              --title "$release_title" \
+              --notes "$release_notes" \
+              --latest
+          fi
+
+          gh release upload "$release_tag" release-artifacts/*.tar.gz --clobber
