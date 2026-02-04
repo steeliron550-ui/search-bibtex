@@ -13,6 +13,9 @@ permissions:
   actions: read
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 concurrency:
   group: release-main
   cancel-in-progress: true
@@ -27,6 +30,11 @@ jobs:
       RUN_ID: ${{ github.event.workflow_run.id }}
       RUN_SHA: ${{ github.event.workflow_run.head_sha }}
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Download build artifacts
         run: gh run download "$RUN_ID" -n "search-bibtex-binaries-$RUN_SHA" -D release-input
 
@@ -35,14 +43,15 @@ jobs:
           set -euo pipefail
           shopt -s nullglob
 
+          release_dir="release-artifacts"
+          mkdir -p "$release_dir"
+          git archive --format=tar.gz --output "$release_dir/search-bibtex-source.tar.gz" "$RUN_SHA"
+
           dist_bin_root="$(find release-input -type d -name dist-bin -print -quit)"
           if [ -z "$dist_bin_root" ]; then
             echo "dist-bin directory was not found in the downloaded build artifact." >&2
             exit 1
           fi
-
-          release_dir="release-artifacts"
-          mkdir -p "$release_dir"
 
           for binary_dir in "$dist_bin_root"/*; do
             [ -d "$binary_dir" ] || continue
