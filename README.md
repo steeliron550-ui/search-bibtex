@@ -134,6 +134,7 @@ search-bibtex update tests/bibtex/acl_test.bib --output updated.bib
 ```
 
 搜索阶段默认超时 30 秒，可用 `--timeout` 调整。
+`update` 在 TTY 下会显示进度条；交互式运行时会逐条确认，未匹配的条目保持不变。
 
 从标题字符串搜索，多个标题默认用英文分号分隔：
 
