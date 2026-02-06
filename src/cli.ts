@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { writeFile } from "node:fs/promises";
 
-import { refineBibtexFile } from "./bibtex-file.js";
+import { refineBibtexFile, type BibtexRefinementProgressEvent } from "./bibtex-file.js";
 import {
   defaultConfigToml,
   defaultSearchPreferences,
@@ -132,12 +132,29 @@ export function createProgram(): Command {
       }
 
       const config = await loadResolvedAppConfig({ configPath: options.config });
-      const result = await refineBibtexFile(bibtexPath, {
-        preferences: buildSearchPreferences(options, config),
-        customSources: config.sources,
-        parallel: options.parallel ?? config.search.parallel,
-        timeoutMs: (options.timeout ?? config.search.timeoutSeconds) * 1000
-      });
+      const progress = createBibtexUpdateProgressReporter();
+      let result: Awaited<ReturnType<typeof refineBibtexFile>> | undefined;
+
+      try {
+        result = await refineBibtexFile(bibtexPath, {
+          preferences: buildSearchPreferences(options, config),
+          customSources: config.sources,
+          parallel: options.parallel ?? config.search.parallel,
+          timeoutMs: (options.timeout ?? config.search.timeoutSeconds) * 1000,
+          selectResult: shouldUseInteractiveSearch()
+            ? async ({ response }) => {
+                return await runInteractiveSelection(response.results, { sourceErrors: response.sourceErrors });
+              }
+            : undefined,
+          onProgress: progress.report
+        });
+      } finally {
+        progress.finish();
+      }
+
+      if (!result) {
+        throw new Error("BibTeX update did not produce a result.");
+      }
 
       if (result.sourceErrors.length > 0) {
         process.stderr.write(`${JSON.stringify({ sourceErrors: result.sourceErrors }, null, 2)}\n`);
@@ -484,6 +501,127 @@ export function shouldUseInteractiveSearch(
 
 export async function main(argv = process.argv): Promise<void> {
   await createProgram().parseAsync(argv);
+}
+
+interface BibtexUpdateProgressReporter {
+  report: (event: BibtexRefinementProgressEvent) => void;
+  finish: () => void;
+}
+
+function createBibtexUpdateProgressReporter(): BibtexUpdateProgressReporter {
+  if (!process.stderr.isTTY) {
+    return {
+      report: () => {},
+      finish: () => {}
+    };
+  }
+
+  let rendered = false;
+
+  return {
+    report(event) {
+      const line = renderBibtexUpdateProgress(event, process.stderr.columns);
+      process.stderr.write(`\r\x1b[2K${line}`);
+      rendered = true;
+    },
+    finish() {
+      if (!rendered) {
+        return;
+      }
+      process.stderr.write("\r\x1b[2K\n");
+      rendered = false;
+    }
+  };
+}
+
+function renderBibtexUpdateProgress(
+  event: BibtexRefinementProgressEvent,
+  columns?: number
+): string {
+  const bar = renderProgressBar(computeBibtexUpdateProgressRatio(event), 20);
+  const counts = `${event.completed}/${Math.max(0, event.total)}`;
+  const detail = renderBibtexUpdateProgressDetail(event);
+  const base = `update ${bar} ${counts}`;
+
+  if (!detail) {
+    return base;
+  }
+
+  const available = typeof columns === "number" && columns > 0
+    ? Math.max(0, columns - base.length - 1)
+    : detail.length;
+  const fittedDetail = truncateText(detail, available);
+  return fittedDetail ? `${base} ${fittedDetail}` : base;
+}
+
+function computeBibtexUpdateProgressRatio(event: BibtexRefinementProgressEvent): number {
+  if (event.total <= 0) {
+    return 1;
+  }
+
+  if (event.current?.status === "searching" && event.searchProgress !== undefined) {
+    const fraction = event.searchProgress.total > 0
+      ? event.searchProgress.completed / event.searchProgress.total
+      : 1;
+    return Math.min(1, (event.completed + fraction) / event.total);
+  }
+
+  return Math.min(1, event.completed / event.total);
+}
+
+function renderBibtexUpdateProgressDetail(event: BibtexRefinementProgressEvent): string {
+  if (!event.current) {
+    return event.total <= 0 ? "done" : "starting";
+  }
+
+  const status = event.current.status === "awaiting-confirmation"
+    ? "confirming"
+    : event.current.status;
+  const parts = [
+    status,
+    `#${event.current.index + 1}`,
+    `"${event.current.title}"`
+  ];
+
+  if (event.current.status === "searching" && event.searchProgress !== undefined) {
+    parts.push(`(${event.searchProgress.completed}/${event.searchProgress.total} sources)`);
+  }
+
+  return parts.join(" ");
+}
+
+function renderProgressBar(ratio: number, width: number): string {
+  if (width <= 0) {
+    return "[]";
+  }
+
+  const clamped = Math.min(1, Math.max(0, ratio));
+  const filled = Math.floor(clamped * width);
+
+  if (filled <= 0) {
+    return `[>${" ".repeat(Math.max(0, width - 1))}]`;
+  }
+
+  if (filled >= width) {
+    return `[${"=".repeat(width)}]`;
+  }
+
+  return `[${"=".repeat(filled)}>${" ".repeat(width - filled - 1)}]`;
+}
+
+function truncateText(text: string, maxLength: number): string {
+  if (maxLength <= 0) {
+    return "";
+  }
+
+  if (text.length <= maxLength) {
+    return text.slice(0, maxLength);
+  }
+
+  if (maxLength === 1) {
+    return "…";
+  }
+  return `${text.slice(0, maxLength - 1)}…`;
 }
 
 function createSearchProgressReporter(prefix: string): (event: { completed: number; total: number; completedSources: PaperSource[]; failedSources: PaperSource[]; }) => void {
