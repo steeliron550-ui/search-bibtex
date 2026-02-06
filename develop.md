@@ -113,6 +113,7 @@ stdout BibTeX / JSON
 
 `cli.ts` 用 Commander 暴露 `config-defaults`、`metadata`、`search`、`update` 和 `select` 命令。
 `search` 和 `select` 在 TTY 中会先输出源搜索进度提示，再进入交互选择器；进度信息写入 stderr，不污染 JSON 和 BibTeX 输出。交互确认时会在屏幕上显示格式化 BibTeX，并尝试复制到剪贴板；需要 stdout 输出时使用 `--select-index`。
+`update` 在 TTY 中会显示条目级进度条；交互模式下逐条确认，非交互模式自动采纳排序后的首个匹配，无匹配则保留原条目。
 
 `index.ts` 导出库 API，脚本和未来集成都应从这里导入公共能力。
 
