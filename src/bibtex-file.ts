@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { FetchLike } from "./http.js";
 import type { CustomSourceConfig } from "./config.js";
+import { formatBibtexText } from "./bibtex.js";
 import { extractArxivId, extractDoi, normalizeWhitespace } from "./metadata.js";
 import { searchBibtex, type SearchPreferenceInput, type SearchProgressEvent } from "./search.js";
 import type {
@@ -177,7 +178,7 @@ export async function refineBibtexDocument(
     sourceErrors.push(...response.sourceErrors);
 
     if (response.results.length === 0) {
-      updatedParts.push(segment.text);
+      updatedParts.push(formatBibtexText(segment.text));
       entries.push({
         index: entryIndex,
         citationKey,
@@ -222,7 +223,7 @@ export async function refineBibtexDocument(
       throw new Error(`BibTeX update cancelled for ${citationKey}.`);
     }
 
-    const selectedBibtex = rewriteBibtexCitationKey(selected.bibtex, citationKey);
+    const selectedBibtex = formatBibtexText(rewriteBibtexCitationKey(selected.bibtex, citationKey));
     updatedParts.push(selectedBibtex);
     entries.push({
       index: entryIndex,
