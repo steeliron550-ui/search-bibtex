@@ -2,13 +2,19 @@
 import { Command } from "commander";
 import { writeFile } from "node:fs/promises";
 
-import { refineBibtexFile, type BibtexRefinementProgressEvent } from "./bibtex-file.js";
+import {
+  KEEP_CURRENT_SELECTION_SOURCE,
+  refineBibtexFile,
+  type BibtexRefinementProgressEvent,
+  type BibtexRefinementSelectionContext
+} from "./bibtex-file.js";
 import {
   defaultConfigToml,
   defaultSearchPreferences,
   loadResolvedAppConfig,
   type ResolvedAppConfig
 } from "./config.js";
+import { formatBibtexText } from "./bibtex.js";
 import { buildMetadataCandidate, buildTitleMetadataCandidate, generateSearchQueries } from "./metadata.js";
 import { extractPdfDocumentSnapshot } from "./pdf.js";
 import { searchBibtex, searchBibtexFromPdf } from "./search.js";
@@ -142,8 +148,11 @@ export function createProgram(): Command {
           parallel: options.parallel ?? config.search.parallel,
           timeoutMs: (options.timeout ?? config.search.timeoutSeconds) * 1000,
           selectResult: shouldUseInteractiveSearch()
-            ? async ({ response }) => {
-                return await runInteractiveSelection(response.results, { sourceErrors: response.sourceErrors });
+            ? async (context) => {
+                return await runInteractiveSelection(
+                  [buildKeepCurrentSelectionResult(context), ...context.response.results],
+                  { sourceErrors: context.response.sourceErrors }
+                );
               }
             : undefined,
           onProgress: progress.report
@@ -531,6 +540,31 @@ function createBibtexUpdateProgressReporter(): BibtexUpdateProgressReporter {
       process.stderr.write("\r\x1b[2K\n");
       rendered = false;
     }
+  };
+}
+
+export function buildKeepCurrentSelectionResult(
+  context: BibtexRefinementSelectionContext
+): SearchResult {
+  return {
+    source: KEEP_CURRENT_SELECTION_SOURCE,
+    title: "Keep current format",
+    authors: context.currentEntry.authors,
+    year: context.currentEntry.year,
+    doi: context.currentEntry.doi,
+    arxivId: context.currentEntry.arxivId,
+    venue: context.currentEntry.fields.journal ?? context.currentEntry.fields.booktitle,
+    url: context.currentEntry.fields.url,
+    matchedQuery: context.response.queries[0]?.kind ?? "title",
+    score: 0,
+    scoreBreakdown: {
+      title: 0,
+      author: 0,
+      year: 0,
+      identifier: 0,
+      source: 0
+    },
+    bibtex: formatBibtexText(context.currentEntry.raw)
   };
 }
 
