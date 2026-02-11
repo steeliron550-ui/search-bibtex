@@ -12,3 +12,4 @@ coverage/
 *.tmp
 *.tsbuildinfo
 .history
+.claude
