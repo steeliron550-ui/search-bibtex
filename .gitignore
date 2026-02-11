@@ -11,3 +11,4 @@ coverage/
 *.log
 *.tmp
 *.tsbuildinfo
+.history
