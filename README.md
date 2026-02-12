@@ -72,7 +72,7 @@ search-bibtex update references.bib --in-place
 search-bibtex update references.bib --output updated.bib
 ```
 
-### 配置
+## 配置
 
 默认配置文件路径是 `~/.config/search-bibtex/config.toml`。缺省路径文件不存在时会直接使用内置默认值；显式传入 `--config <path>` 且文件不存在时会报错。命令行参数优先于配置文件。
 
