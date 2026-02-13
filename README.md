@@ -149,7 +149,7 @@ make build-binaries
 - [发布](RELEASING.zh-CN.md) / [Releasing](RELEASING.md)
 - [变更记录](CHANGELOG.zh-CN.md) / [Changelog](CHANGELOG.md)
 
-### 限制
+## 限制
 
 PDF 文本抽取依赖文件本身的可抽取文本质量；扫描版 PDF 需要先做 OCR。Semantic Scholar 匿名访问可能触发限流，限流会显示为源错误。外部书目信息源的 BibTeX 风格不完全一致，本工具保留源返回的 BibTeX，只做必要的首尾空白规范化。
 
