@@ -73,7 +73,7 @@ Adding a built-in source requires updating:
 3. Search, normalization, and source registration in `search.ts`.
 4. Source-specific BibTeX retrieval in `bibtex.ts`, if needed.
 5. `tests/search.test.ts` or related tests.
-6. Source documentation in `README.md`, configuration docs, architecture docs, and `SKILL.md`.
+6. Source documentation in `README.md` and `README.en.md`, configuration docs, architecture docs, and `SKILL.md`.
 
 Custom sources do not require source changes; they are declared through `[[sources]]` in `config.toml`.
 
