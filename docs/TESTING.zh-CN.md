@@ -83,7 +83,7 @@ codesign --sign - dist-bin/macos-arm64/search-bibtex
 
 ```bash
 git diff --check
-rg -n "develop\\.md|CONFIGURATION|ARCHITECTURE|TESTING|RELEASING|CONTRIBUTING|CHANGELOG" README.md docs CONTRIBUTING*.md RELEASING*.md CHANGELOG*.md SKILL.md
+rg -n "develop\\.md|CONFIGURATION|ARCHITECTURE|TESTING|RELEASING|CONTRIBUTING|CHANGELOG" README*.md docs CONTRIBUTING*.md RELEASING*.md CHANGELOG*.md SKILL.md
 ```
 
 如果命令名、选项名、配置字段或默认来源顺序发生变化，同步更新中英文 README、配置文档、架构文档和 `SKILL.md`。
