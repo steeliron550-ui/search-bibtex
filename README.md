@@ -20,6 +20,15 @@
     - arXiv 适合预印本，但不一定对应最终发表版本；
     - Semantic Scholar 覆盖广，但可能存在限流或元数据差异。
   因此需要多数据源交叉验证、优先级排序和冲突处理。
+  3. 手工整理 BibTeX 成本高
+  高质量学术论文通常引用几十甚至上百篇文献。人工逐条搜索、复制 BibTeX、修正格式非常耗时，并且容易出现：
+    - BibTeX 类型不一致；
+    - citation key 风格混乱；
+    - 作者名格式不统一；
+    - 会议/期刊名称不统一；
+    - DOI、URL、arXiv ID 缺失或错误；
+    - 重复条目难以发现。
+
 
 `search-bibtex` 是一个独立的论文 PDF 到 BibTeX 命令行工具。它从本地论文 PDF 中提取 DOI、arXiv ID、标题、作者和年份，查询 DBLP、arXiv、Crossref、OpenAlex、DOI 内容协商、Semantic Scholar 以及可选的自定义 HTTP JSON 来源，然后按配置的来源优先级和字段权重排序候选结果。用户可以在终端中交互选择 BibTeX，也可以用 `--select-index` 做非交互选择。
 
