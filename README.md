@@ -2,6 +2,34 @@
 
 [**English**](README.en.md) | **中文**
 
+## 需求分析
+
+  在学术写作过程中，参考文献质量直接影响论文可信度、审稿结果和学术诚信。当前痛点主要包括：
+
+  1. 幻觉引用风险严重
+  使用大模型、搜索引擎或人工记忆整理参考文献时，可能出现不存在的论文、错误标题、错误作者、错误 DOI、错误年份等“幻觉引用”。
+  这类问题可能导致：
+    - 审稿人无法检索到引用来源；
+    - 论文被质疑可靠性；
+    - 轻则返修、拒稿，重则涉及学术道德问题。
+  2. 单一数据源不可靠
+  DBLP、Crossref、OpenAlex、arXiv、Semantic Scholar、DOI 内容协商等数据源各有优势和缺陷。
+  例如：
+    - DBLP 在计算机领域质量较高，但覆盖面有限；
+    - Crossref DOI 信息权威，但有时字段不完整；
+    - arXiv 适合预印本，但不一定对应最终发表版本；
+    - Semantic Scholar 覆盖广，但可能存在限流或元数据差异。
+  因此需要多数据源交叉验证、优先级排序和冲突处理。
+  3. 手工整理 BibTeX 成本高
+  高质量学术论文通常引用几十甚至上百篇文献。人工逐条搜索、复制 BibTeX、修正格式非常耗时，并且容易出现：
+    - BibTeX 类型不一致；
+    - citation key 风格混乱；
+    - 作者名格式不统一；
+    - 会议/期刊名称不统一；
+    - DOI、URL、arXiv ID 缺失或错误；
+    - 重复条目难以发现。
+
+
 `search-bibtex` 是一个独立的论文 PDF 到 BibTeX 命令行工具。它从本地论文 PDF 中提取 DOI、arXiv ID、标题、作者和年份，查询 DBLP、arXiv、Crossref、OpenAlex、DOI 内容协商、Semantic Scholar 以及可选的自定义 HTTP JSON 来源，然后按配置的来源优先级和字段权重排序候选结果。用户可以在终端中交互选择 BibTeX，也可以用 `--select-index` 做非交互选择。
 
 项目以多平台二进制分发，不走 npm 发布。运行时代码不依赖 Paperlib，也不接入 Grok search；Grok search 只可作为开发期资料检索辅助工具。
