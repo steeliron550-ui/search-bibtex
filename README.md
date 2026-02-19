@@ -182,6 +182,27 @@ q            取消选择
 Ctrl-C       取消选择
 ```
 
+## 典型使用场景
+  
+  场景 A：论文作者整理参考文献
+
+  用户已经有若干 PDF，希望快速生成 BibTeX。
+
+  流程：
+
+  1. 输入论文 PDF；
+  2. 工具提取标题、作者、年份、DOI；
+  3. 查询多个数据源；
+  4. 返回候选 BibTeX；
+  5. 用户选择最可信条目；
+  6. 输出 BibTeX。
+
+  价值：
+
+  - 减少手动搜索；
+  - 降低复制错误；
+  - 优先获取权威 BibTeX。
+
 ## 开发文档
 
 - [配置](docs/CONFIGURATION.zh-CN.md) / [Configuration](docs/CONFIGURATION.md)
