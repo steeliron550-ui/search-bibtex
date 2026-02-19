@@ -222,6 +222,26 @@ Ctrl-C       取消选择
   - 避免将幻觉引用写入论文；
   - 降低学术诚信风险。
 
+  ---
+  场景 C：刷新已有 BibTeX 文件
+  
+  用户已有 .bib 文件，但条目格式混乱或字段缺失。
+
+  流程：
+
+  1. 输入 references.bib；
+  2. 工具解析每个条目标题；
+  3. 检索多个来源；
+  4. 替换条目内容；
+  5. 保留原 citation key；
+  6. 输出更新后的 .bib。
+
+  价值：
+
+  - 统一引用元数据；
+  - 保留正文中的引用键；
+  - 降低大规模手动修正成本。
+
 ## 开发文档
 
 - [配置](docs/CONFIGURATION.zh-CN.md) / [Configuration](docs/CONFIGURATION.md)
