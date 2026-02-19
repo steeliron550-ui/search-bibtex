@@ -58,6 +58,8 @@
 
 ## 安装
 
+### 下载二进制
+
 二进制按平台和架构放在 `dist-bin/`：
 
 ```text
@@ -66,6 +68,25 @@ dist-bin/<platform-arch>/search-bibtex.exe
 ```
 
 把对应平台目录加入 `PATH`，或直接用绝对路径运行。运行二进制不需要本机安装 Node.js。
+
+### 从源码构建
+
+```bash
+pnpm install
+pnpm build
+pnpm build:binary
+```
+
+也可以使用 Makefile：
+
+```bash
+make install
+make build
+make binary
+make build-binaries
+```
+
+`make binary` 生成当前平台二进制，`make build-binaries` 生成全部平台目标。
 
 ## 快速开始
 
@@ -160,25 +181,6 @@ Esc          退出过滤或取消选择
 q            取消选择
 Ctrl-C       取消选择
 ```
-
-## 从源码构建
-
-```bash
-pnpm install
-pnpm build
-pnpm build:binary
-```
-
-也可以使用 Makefile：
-
-```bash
-make install
-make build
-make binary
-make build-binaries
-```
-
-`make binary` 生成当前平台二进制，`make build-binaries` 生成全部平台目标。
 
 ## 开发文档
 
