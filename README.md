@@ -348,6 +348,151 @@ Clipboard: clipboard unavailable
 }
 ```
 
+指定多个论文标题进行搜索。
+
+
+
+```bash
+> ./search-bibtex search-title "Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling" "Dp-forward: Fine-tuning and inference on language models with differential privacy in forward pass"
+search-title[1]: searching 6 source channels...
+search-title[1]: 1/6 source channels completed [doi]
+search-title[1]: 2/6 source channels completed [doi] failed [dblp]
+search-title[1]: 3/6 source channels completed [doi] failed [dblp, arxiv]
+search-title[1]: 4/6 source channels completed [doi] failed [dblp, arxiv, crossref]
+search-title[1]: 5/6 source channels completed [doi] failed [dblp, arxiv, crossref, semantic-scholar]
+search-title[1]: 6/6 source channels completed [openalex, doi] failed [dblp, arxiv, crossref, semantic-scholar]
+search-bibtex candidate selection
+Source issues:
+  dblp fetch failed, arxiv fetch failed, crossref fetch failed, semantic-scholar 429 HTTP
+  429 from https://api.semanticscholar.org...
+Filter: 
+Keys: j/k move, g/G jump, / filter, Ctrl+O preview, Enter select, q cancel
+
+> [0] openalex         0.470 Tackling System and Statistical Heterogeneity for Federated Learning wi...
+  [1] openalex         0.470 Tackling System and Statistical Heterogeneity for Federated Learning wi...
+  [2] openalex         0.192 Adaptive Heterogeneous Client Sampling for Federated Learning Over Wire...
+  [3] openalex         0.133 FedPARL: Client Activity and Resource-Oriented Lightweight Federated Le...
+  [4] openalex         0.123 Advances and Open Problems in Federated Learning
+  [5] openalex         0.103 Federated Learning: A Survey on Enabling Technologies, Protocols, and A...
+  [6] openalex         0.102 Towards Personalized Federated Learning
+  [7] openalex         0.093 FedProto: Federated Prototype Learning across Heterogeneous Clients
+  [8] openalex         0.093 Edge Artificial Intelligence for 6G: Vision, Enabling Technologies, and...
+  [9] openalex         0.072 Pushing AI to wireless network edge: an overview on integrated sensing,...
+
+Title: Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling
+Authors: Bing Luo and Wenli Xiao and Shiqiang Wang and ... (+2 more)
+Year: 2022  Venue: IEEE INFOCOM 2022 - IEEE Conference on Computer Communications
+IDs: DOI https://doi.org/10.1109/infocom48880.2022.9796935
+
+BibTeX preview: compact
+@inproceedings{Luo_2022, title={Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling}, url={http://dx.doi.org/10.1109/infocom48880.2022.9796935}, DOI={10.1109/infocom48880.2022.9796935}, booktitle={IEEE INFOCOM 2022 - IEEE Conference on Computer Communications}, publisher={IEEE}, author={Luo, Bing and Xiao, Wenli and Wang, Shiqiang and Huang, Jianwei and Tassiulas, Leandros}, year={2022}, month=May, pages={1739–1748} }
+  title = {Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Cl...}
+  author = {Bing Luo and Wenli Xiao and Shiqiang Wang and Jianwei Huang and ... (+1 more)}
+  year = {2022}
+  booktitle = {IEEE INFOCOM 2022 - IEEE Conference on Computer Communications}
+  doi = {https://doi.org/10.1109/infocom48880.2022.9796935}
+  url = {https://openalex.org/W4226183928}
+}
+search-bibtex selection confirmed
+Title: Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling
+Source: openalex  Score: 0.470
+Clipboard: clipboard unavailable
+
+@inproceedings{Luo_2022,
+  title = {Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling},
+  url = {http://dx.doi.org/10.1109/infocom48880.2022.9796935},
+  doi = {10.1109/infocom48880.2022.9796935},
+  booktitle = {IEEE INFOCOM 2022 - IEEE Conference on Computer Communications},
+  publisher = {IEEE},
+  author = {Luo, Bing and Xiao, Wenli and Wang, Shiqiang and Huang, Jianwei and Tassiulas, Leandros},
+  year = {2022},
+  month = May,
+  pages = {1739–1748},
+}search-title[2]: searching 6 source channels...
+search-title[2]: 1/6 source channels completed [doi]
+search-title[2]: 2/6 source channels completed [doi] failed [arxiv]
+search-title[2]: 3/6 source channels completed [doi] failed [arxiv, semantic-scholar]
+search-title[2]: 4/6 source channels completed [doi] failed [dblp, arxiv, semantic-scholar]
+search-title[2]: 5/6 source channels completed [crossref, doi] failed [dblp, arxiv, semantic-scholar]
+search-title[2]: 6/6 source channels completed [crossref, openalex, doi] failed [dblp, arxiv, semantic-scholar]
+search-bibtex candidate selection
+Source issues:
+  dblp 500 HTTP 500 from https://dblp.org/search/publ/ap..., arxiv 429 HTTP 429 from
+  https://export.arxiv.org/api/qu..., semantic-scholar 429 HTTP 429 from
+  https://api.semanticscholar.org...
+Filter: 
+Keys: j/k move, g/G jump, / filter, Ctrl+O preview, Enter select, q cancel
+
+> [0] crossref         0.480 DP-Forward: Fine-tuning and Inference on Language Models with Different...
+  [1] openalex         0.470 DP-Forward: Fine-tuning and Inference on Language Models with Different...
+  [2] crossref         0.211 Fine-Tuning Language Models with Just Forward Passes
+  [3] crossref         0.210 Fine-Tuning Language Models with Differential Privacy through Adaptive ...
+  [4] crossref         0.207 Towards Fine-tuning Pre-trained Language Models with Integer Forward an...
+  [5] crossref         0.197 EW-Tune: A Framework for Privately Fine-Tuning Large Language Models wi...
+  [6] crossref         0.175 DP-FedLoRA: Privacy-Enhanced Federated Fine-Tuning for On-Device Large ...
+  [7] crossref         0.158 Privacy-Aware Federated Fine-Tuning of Large Pretrained Models With Jus...
+  [8] crossref         0.150 Is Differential Privacy-Enhanced Parameter-Efficient Fine-Tuning Effect...
+  [9] crossref         0.145 Extractive Fact Decomposition for Interpretable Natural Language Infere...
+
+Title: DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in Forward Pass
+Authors: Minxin Du and Xiang Yue and Sherman S. M. Chow and ... (+3 more)
+Year: 2023  Venue: Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security
+IDs: DOI 10.1145/3576915.3616592
+
+BibTeX preview: compact
+@inproceedings{Du_2023, series={CCS ’23}, title={DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in Forward Pass}, url={http://dx.doi.org/10.1145/3576915.3616592}, DOI={10.1145/3576915.3616592}, booktitle={Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security}, publisher={ACM}, author={Du, Minxin and Yue, Xiang and Chow, Sherman S. M. and Wang, Tianhao and Huang, Chenyu and Sun, Huan}, year={2023}, month=Nov, pages={2665–2679}, collection={CCS ’23} }
+  title = {DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in...}
+  author = {Minxin Du and Xiang Yue and Sherman S. M. Chow and Tianhao Wang and ... (+2 more)}
+  year = {2023}
+  booktitle = {Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security}
+  doi = {10.1145/3576915.3616592}
+  url = {https://doi.org/10.1145/3576915.3616592}
+}
+search-bibtex selection confirmed
+Title: DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in Forward Pass
+Source: crossref  Score: 0.480
+Clipboard: clipboard unavailable
+
+@inproceedings{Du_2023,
+  series = {CCS ’23},
+  title = {DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in Forward Pass},
+  url = {http://dx.doi.org/10.1145/3576915.3616592},
+  doi = {10.1145/3576915.3616592},
+  booktitle = {Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security},
+  publisher = {ACM},
+  author = {Du, Minxin and Yue, Xiang and Chow, Sherman S. M. and Wang, Tianhao and Huang, Chenyu and Sun, Huan},
+  year = {2023},
+  month = Nov,
+  pages = {2665–2679},
+  collection = {CCS ’23},
+}@inproceedings{Luo_2022,
+  title = {Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling},
+  url = {http://dx.doi.org/10.1109/infocom48880.2022.9796935},
+  doi = {10.1109/infocom48880.2022.9796935},
+  booktitle = {IEEE INFOCOM 2022 - IEEE Conference on Computer Communications},
+  publisher = {IEEE},
+  author = {Luo, Bing and Xiao, Wenli and Wang, Shiqiang and Huang, Jianwei and Tassiulas, Leandros},
+  year = {2022},
+  month = May,
+  pages = {1739–1748},
+}
+
+@inproceedings{Du_2023,
+  series = {CCS ’23},
+  title = {DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in Forward Pass},
+  url = {http://dx.doi.org/10.1145/3576915.3616592},
+  doi = {10.1145/3576915.3616592},
+  booktitle = {Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security},
+  publisher = {ACM},
+  author = {Du, Minxin and Yue, Xiang and Chow, Sherman S. M. and Wang, Tianhao and Huang, Chenyu and Sun, Huan},
+  year = {2023},
+  month = Nov,
+  pages = {2665–2679},
+  collection = {CCS ’23},
+}
+
+```
+
 ## 开发文档
 
 - [配置](docs/CONFIGURATION.zh-CN.md) / [Configuration](docs/CONFIGURATION.md)
