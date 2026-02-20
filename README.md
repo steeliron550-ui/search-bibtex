@@ -286,6 +286,68 @@ Ctrl-C       取消选择
 }
 ```
 
+指定单个论文标题进行搜索。
+
+```
+> ./search-bibtex search-title "Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling"
+search-title: searching 6 source channels...
+search-title: 1/6 source channels completed [doi]
+search-title: 2/6 source channels completed [doi] failed [semantic-scholar]
+search-title: 3/6 source channels completed [doi] failed [arxiv, semantic-scholar]
+search-title: 4/6 source channels completed [crossref, doi] failed [arxiv, semantic-scholar]
+search-title: 5/6 source channels completed [crossref, openalex, doi] failed [arxiv, semantic-scholar]
+search-title: 6/6 source channels completed [crossref, openalex, doi] failed [dblp, arxiv, semantic-scholar]
+search-bibtex candidate selection
+Source issues:
+  dblp 500 HTTP 500 from https://dblp.org/search/publ/ap..., arxiv 429 HTTP 429 from
+  https://export.arxiv.org/api/qu..., semantic-scholar 429 HTTP 429 from
+  https://api.semanticscholar.org...
+Filter: 
+Keys: j/k move, g/G jump, / filter, Ctrl+O preview, Enter select, q cancel
+
+> [0] crossref         0.480 Tackling System and Statistical Heterogeneity for Federated Learning wi...
+  [1] openalex         0.470 Tackling System and Statistical Heterogeneity for Federated Learning wi...
+  [2] openalex         0.470 Tackling System and Statistical Heterogeneity for Federated Learning wi...
+  [3] crossref         0.210 FedCSGA: Evolutionary client selection with joint statistical and syste...
+  [4] crossref         0.207 FedDiverse: Tackling Data Heterogeneity in Federated Learning with Dive...
+  [5] crossref         0.202 Adaptive Heterogeneous Client Sampling for Federated Learning Over Wire...
+  [6] openalex         0.192 Adaptive Heterogeneous Client Sampling for Federated Learning Over Wire...
+  [7] crossref         0.182 Tackling Privacy Heterogeneity in Federated Learning
+  [8] crossref         0.180 FedClust: Tackling Data Heterogeneity in Federated Learning through Wei...
+  [9] crossref         0.178 RingSFL: An Adaptive Split Federated Learning Towards Taming Client Het...
+
+Title: Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling
+Authors: Bing Luo and Wenli Xiao and Shiqiang Wang and ... (+2 more)
+Year: 2022  Venue: IEEE INFOCOM 2022 - IEEE Conference on Computer Communications
+IDs: DOI 10.1109/infocom48880.2022.9796935
+
+BibTeX preview: compact
+@inproceedings{Luo_2022, title={Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling}, url={http://dx.doi.org/10.1109/infocom48880.2022.9796935}, DOI={10.1109/infocom48880.2022.9796935}, booktitle={IEEE INFOCOM 2022 - IEEE Conference on Computer Communications}, publisher={IEEE}, author={Luo, Bing and Xiao, Wenli and Wang, Shiqiang and Huang, Jianwei and Tassiulas, Leandros}, year={2022}, month=May, pages={1739–1748} }
+  title = {Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Cl...}
+  author = {Bing Luo and Wenli Xiao and Shiqiang Wang and Jianwei Huang and ... (+1 more)}
+  year = {2022}
+  booktitle = {IEEE INFOCOM 2022 - IEEE Conference on Computer Communications}
+  doi = {10.1109/infocom48880.2022.9796935}
+  url = {https://doi.org/10.1109/infocom48880.2022.9796935}
+}
+search-bibtex selection confirmed
+Title: Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling
+Source: crossref  Score: 0.480
+Clipboard: clipboard unavailable
+
+@inproceedings{Luo_2022,
+  title = {Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling},
+  url = {http://dx.doi.org/10.1109/infocom48880.2022.9796935},
+  doi = {10.1109/infocom48880.2022.9796935},
+  booktitle = {IEEE INFOCOM 2022 - IEEE Conference on Computer Communications},
+  publisher = {IEEE},
+  author = {Luo, Bing and Xiao, Wenli and Wang, Shiqiang and Huang, Jianwei and Tassiulas, Leandros},
+  year = {2022},
+  month = May,
+  pages = {1739–1748},
+}
+```
+
 ## 开发文档
 
 - [配置](docs/CONFIGURATION.zh-CN.md) / [Configuration](docs/CONFIGURATION.md)
