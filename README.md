@@ -350,8 +350,6 @@ Clipboard: clipboard unavailable
 
 指定多个论文标题进行搜索。
 
-
-
 ```bash
 > ./search-bibtex search-title "Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling" "Dp-forward: Fine-tuning and inference on language models with differential privacy in forward pass"
 search-title[1]: searching 6 source channels...
