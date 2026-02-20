@@ -260,6 +260,32 @@ Ctrl-C       取消选择
   - 建立论文引用质量门禁；
   - 适合团队协作。
 
+## 测试 / 例子
+
+配置bibtex源
+
+```bash
+> ./search-bibtex config-defaults
+{
+  "sourcePriority": [
+    "dblp",
+    "arxiv",
+    "crossref",
+    "openalex",
+    "doi",
+    "semantic-scholar"
+  ],
+  "weights": {
+    "title": 0.45,
+    "author": 0.2,
+    "year": 0.1,
+    "identifier": 0.2,
+    "source": 0.05
+  },
+  "limit": 10
+}
+```
+
 ## 开发文档
 
 - [配置](docs/CONFIGURATION.zh-CN.md) / [Configuration](docs/CONFIGURATION.md)
