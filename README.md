@@ -490,6 +490,47 @@ Clipboard: clipboard unavailable
 }
 ```
 
+提取论文元数据
+
+```bash
+./search-bibtex metadata ../../tests/pdf/"RollPacker Taming Long-Tail Rollouts for RL Post-Training with Tail Batching.pdf"        
+{
+  "metadata": {
+    "filePath": "/home/whr/projects/search-bibtex/tests/pdf/RollPacker Taming Long-Tail Rollouts for RL Post-Training with Tail Batching.pdf",
+    "pageCount": 18,
+    "title": "RollPacker: Taming Long-Tail Rollouts for RL Post-Training with Tail Batching Wei Gao",
+    "authors": [
+      "Yuheng Zhao",
+      "Dakai An",
+      "Tianyuan Wu",
+      "Lunxi Cao",
+      "Shaopan Xiong",
+      "Ju Huang",
+      "Weixun Wang",
+      "Siran Yang",
+      "Wenbo Su",
+      "Jiamang Wang",
+      "Lin Qu",
+      "Bo Zheng"
+    ],
+    "textSample": "RollPacker: Taming Long-Tail Rollouts for RL Post-Training with Tail Batching Wei Gao †∗ , Yuheng Zhao †∗ , Dakai An † , Tianyuan Wu † , Lunxi Cao † , Shaopan Xiong ‡ , Ju Huang ‡ , Weixun Wang ‡ , Siran Yang ‡ , Wenbo Su ‡ , Jiamang Wang ‡ , Lin Qu ‡ , Bo Zheng ‡ , Wei Wang † † HKUST ‡ Alibaba Group Abstract Reinforcement Learning (RL) is a pivotal post-training technique for enhancing the reasoning capabilities of Large Language Models (LLMs). However, synchronous RL post-training frequently suffers from significant GPU underutilization—often referred to as pipeline “bubbles”— caused by imbalanced response lengths within rollout steps. Many RL systems attempt to alleviate this problem by relax- ing synchronization, but this can compromise training accu- racy. In this paper, we introduce tail batching, a novel roll- out scheduling strategy for synchronous RL. Tail batching systematically consolidates prompts leading to long-tail re- sponses into a few designated “long rounds”, ensuring that the majority of rollout steps (“short rounds”) contain only balanced, short responses. By strategically reordering exe- cution, this approach dramatically reduces GPU idle time and accelerates "
+  },
+  "queries": [
+    {
+      "kind": "title",
+      "value": "RollPacker: Taming Long-Tail Rollouts for RL Post-Training with Tail Batching Wei Gao",
+      "confidence": 0.78
+    },
+    {
+      "kind": "title-author",
+      "value": "RollPacker: Taming Long-Tail Rollouts for RL Post-Training with Tail Batching Wei Gao Yuheng Zhao",
+      "confidence": 0.72
+    }
+  ]
+}
+```
+
+
 ## 开发文档
 
 - [配置](docs/CONFIGURATION.zh-CN.md) / [Configuration](docs/CONFIGURATION.md)
