@@ -288,7 +288,7 @@ Ctrl-C       取消选择
 
 指定单个论文标题进行搜索。
 
-```
+```bash
 > ./search-bibtex search-title "Tackling System and Statistical Heterogeneity for Federated Learning with Adaptive Client Sampling"
 search-title: searching 6 source channels...
 search-title: 1/6 source channels completed [doi]
