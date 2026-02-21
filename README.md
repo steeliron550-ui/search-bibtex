@@ -493,7 +493,7 @@ Clipboard: clipboard unavailable
 提取论文元数据
 
 ```bash
-./search-bibtex metadata ../../tests/pdf/"RollPacker Taming Long-Tail Rollouts for RL Post-Training with Tail Batching.pdf"        
+> ./search-bibtex metadata ../../tests/pdf/"RollPacker Taming Long-Tail Rollouts for RL Post-Training with Tail Batching.pdf"        
 {
   "metadata": {
     "filePath": "/home/whr/projects/search-bibtex/tests/pdf/RollPacker Taming Long-Tail Rollouts for RL Post-Training with Tail Batching.pdf",
