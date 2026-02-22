@@ -530,6 +530,61 @@ Clipboard: clipboard unavailable
 }
 ```
 
+检索指定pdf论文的bibtex
+
+```bash
+> ./search-bibtex search ../../tests/pdf/"DP-Forward Fine-tuning and Inference on Language Models with.pdf"
+search: searching 6 source channels...
+search: 1/6 source channels completed [doi]
+search: 2/6 source channels completed [arxiv, doi]
+search: 3/6 source channels completed [arxiv, doi, semantic-scholar]
+search: 4/6 source channels completed [dblp, arxiv, doi, semantic-scholar]
+search: 5/6 source channels completed [dblp, arxiv, crossref, doi, semantic-scholar]
+search: 6/6 source channels completed [dblp, arxiv, crossref, openalex, doi, semantic-scholar]
+search-bibtex candidate selection
+Filter: 
+Keys: j/k move, g/G jump, / filter, Ctrl+O preview, Enter select, q cancel
+
+> [0] arxiv            0.990 DP-Forward: Fine-tuning and Inference on Language Models with Different...
+  [1] crossref         0.980 DP-Forward: Fine-tuning and Inference on Language Models with Different...
+  [2] openalex         0.970 DP-Forward: Fine-tuning and Inference on Language Models with Different...
+  [3] doi              0.960 DP-Forward: Fine-tuning and Inference on Language Models with Different...
+  [4] semantic-scholar 0.950 DP-Forward: Fine-tuning and Inference on Language Models with Different...
+
+Title: DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in Forward Pass
+Authors: Minxin Du and Xiang Yue and Sherman S. M. Chow and ... (+3 more)
+Year: 2023  Venue: arXiv
+IDs: DOI 10.1145/3576915.3616592  arXiv 2309.06746v2
+
+BibTeX preview: compact
+@inproceedings{Du_2023, series={CCS ’23}, title={DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in Forward Pass}, url={http://dx.doi.org/10.1145/3576915.3616592}, DOI={10.1145/3576915.3616592}, booktitle={Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security}, publisher={ACM}, author={Du, Minxin and Yue, Xiang and Chow, Sherman S. M. and Wang, Tianhao and Huang, Chenyu and Sun, Huan}, year={2023}, month=Nov, pages={2665–2679}, collection={CCS ’23} }
+  title = {DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in...}
+  author = {Minxin Du and Xiang Yue and Sherman S. M. Chow and Tianhao Wang and ... (+2 more)}
+  year = {2023}
+  booktitle = {arXiv}
+  doi = {10.1145/3576915.3616592}
+  eprint = {2309.06746v2}
+  url = {https://arxiv.org/abs/2309.06746v2}
+}
+search-bibtex selection confirmed
+Title: DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in Forward Pass
+Source: arxiv  Score: 0.990
+Clipboard: clipboard unavailable
+
+@inproceedings{Du_2023,
+  series = {CCS ’23},
+  title = {DP-Forward: Fine-tuning and Inference on Language Models with Differential Privacy in Forward Pass},
+  url = {http://dx.doi.org/10.1145/3576915.3616592},
+  doi = {10.1145/3576915.3616592},
+  booktitle = {Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security},
+  publisher = {ACM},
+  author = {Du, Minxin and Yue, Xiang and Chow, Sherman S. M. and Wang, Tianhao and Huang, Chenyu and Sun, Huan},
+  year = {2023},
+  month = Nov,
+  pages = {2665–2679},
+  collection = {CCS ’23},
+}
+```
 
 ## 开发文档
 
