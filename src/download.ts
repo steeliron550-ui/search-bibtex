@@ -1,6 +1,7 @@
 import os from "node:os";
 import nodePath from "node:path";
 
+import { fetchJson, type FetchLike } from "./http.js";
 import type { SearchResult } from "./types.js";
 
 /**
