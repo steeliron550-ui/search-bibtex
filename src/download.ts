@@ -5,6 +5,8 @@ import nodePath from "node:path";
 import { fetchJson, type FetchLike } from "./http.js";
 import type { SearchResult } from "./types.js";
 
+const USER_AGENT = "search-bibtex/0.1 (mailto:codex@local)";
+
 /**
  * Returns the default download directory for PDF files.
  */
