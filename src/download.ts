@@ -73,3 +73,25 @@ export async function resolvePdfUrl(
 
   return undefined;
 }
+
+/**
+ * Downloads a file from a URL and writes it to the given destination path.
+ */
+export async function downloadFile(
+  url: string,
+  destPath: string,
+  fetcher: FetchLike = fetch
+): Promise<void> {
+  const response = await fetcher(url, {
+    headers: {
+      "User-Agent": USER_AGENT
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url}: HTTP ${response.status}`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  await writeFile(destPath, buffer);
+}
