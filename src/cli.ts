@@ -15,6 +15,7 @@ import {
   type ResolvedAppConfig
 } from "./config.js";
 import { formatBibtexText } from "./bibtex.js";
+import { downloadPdfForResult, resolveDefaultDownloadDir } from "./download.js";
 import { buildMetadataCandidate, buildTitleMetadataCandidate, generateSearchQueries } from "./metadata.js";
 import { extractPdfDocumentSnapshot } from "./pdf.js";
 import { searchBibtex, searchBibtexFromPdf } from "./search.js";
