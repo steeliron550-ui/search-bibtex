@@ -96,3 +96,32 @@ export async function downloadFile(
   const buffer = Buffer.from(await response.arrayBuffer());
   await writeFile(destPath, buffer);
 }
+
+/**
+ * Downloads the PDF for a search result to the given output directory.
+ *
+ * Resolves a PDF URL, ensures the output directory exists, downloads the file,
+ * and returns the path to the saved file.
+ */
+export async function downloadPdfForResult(
+  result: SearchResult,
+  outputDir: string,
+  fetcher: FetchLike = fetch
+): Promise<string> {
+  const pdfUrl = await resolvePdfUrl(result, fetcher);
+  if (!pdfUrl) {
+    throw new Error(`No PDF URL found for "${result.title}"`);
+  }
+
+  await ensureDir(outputDir);
+  const filename = buildPdfFilename(result);
+  const destPath = nodePath.join(outputDir, filename);
+  await downloadFile(pdfUrl, destPath, fetcher);
+  return destPath;
+}
+
+async function ensureDir(dir: string): Promise<void> {
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true });
+  }
+}
