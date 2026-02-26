@@ -256,6 +256,8 @@ export function createProgram(): Command {
     .option("--no-parallel", "Search sources serially.")
     .option("-t, --timeout <seconds>", "Maximum search stage duration in seconds.", parsePositiveInteger)
     .option("-d, --delimiter <delimiter>", "Delimiter for multiple title strings in one input. Default: ';'.", ";")
+    .option("--download", "Download the PDF of the selected (or top-ranked) result.")
+    .option("--download-dir <path>", "Directory to save downloaded PDFs. Default: ~/Downloads/search-bibtex/.")
     .action(async (titles: string[] | undefined, options: TitleSearchCommandOptions) => {
       const config = await loadResolvedAppConfig({ configPath: options.config });
       const titleInputs = await collectTitleInputs(titles ?? [], options.delimiter);
