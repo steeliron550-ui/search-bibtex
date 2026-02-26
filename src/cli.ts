@@ -283,7 +283,18 @@ export function createProgram(): Command {
           if (!selected) {
             return;
           }
+          if (options.download) {
+            const outputDir = options.downloadDir ?? resolveDefaultDownloadDir();
+            const savedPath = await downloadPdfForResult(selected, outputDir);
+            process.stderr.write(`Downloaded: ${savedPath}\n`);
+          }
           return;
+        }
+
+        if (options.download && response.results.length > 0) {
+          const outputDir = options.downloadDir ?? resolveDefaultDownloadDir();
+          const savedPath = await downloadPdfForResult(response.results[0], outputDir);
+          process.stderr.write(`Downloaded: ${savedPath}\n`);
         }
 
         process.stdout.write(`${JSON.stringify(response, null, 2)}\n`);
