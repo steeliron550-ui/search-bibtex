@@ -391,6 +391,8 @@ interface UpdateBibtexCommandOptions extends SearchExecutionOptions {
 
 interface TitleSearchCommandOptions extends SearchExecutionOptions {
   delimiter: string;
+  download?: boolean;
+  downloadDir?: string;
 }
 
 export interface TitleSearchResponseEntry {
