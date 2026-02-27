@@ -317,11 +317,20 @@ export function createProgram(): Command {
           return;
         }
         process.stdout.write(formatSelectedTitleSearchResults(selectedResults));
+        if (options.download) {
+          await downloadSelectedResults(selectedResults, options.downloadDir);
+        }
         return;
       }
 
       const responses = await collectTitleSearchResponses(titleInputs, runTitleSearch);
       process.stdout.write(`${JSON.stringify({ titles: responses }, null, 2)}\n`);
+      if (options.download) {
+        const topResults = responses
+          .map((entry) => entry.response.results[0])
+          .filter((result): result is SearchResult => result !== undefined);
+        await downloadSelectedResults(topResults, options.downloadDir);
+      }
     });
 
   return program;
@@ -453,6 +462,22 @@ export function formatSelectedTitleSearchResults(results: SearchResult[]): strin
     return "";
   }
   return `${results.map((result) => formatSelectedResult(result, "bibtex").trimEnd()).join("\n\n")}\n`;
+}
+
+async function downloadSelectedResults(
+  results: SearchResult[],
+  downloadDir?: string
+): Promise<void> {
+  const outputDir = downloadDir ?? resolveDefaultDownloadDir();
+  for (const result of results) {
+    try {
+      const savedPath = await downloadPdfForResult(result, outputDir);
+      process.stderr.write(`Downloaded: ${savedPath}\n`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`Download failed for "${result.title}": ${message}\n`);
+    }
+  }
 }
 
 function buildSearchPreferences(options: SearchExecutionOptions, config: ResolvedAppConfig): SearchPreferences {
