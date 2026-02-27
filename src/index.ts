@@ -12,6 +12,14 @@ export {
   validateSourcePriority
 } from "./config.js";
 export {
+  buildPdfFilename,
+  downloadFile,
+  downloadPdfForResult,
+  resolveDefaultDownloadDir,
+  resolvePdfUrl,
+  sanitizeFilename
+} from "./download.js";
+export {
   fetchBibtexForRecord,
   fetchDblpBibtex,
   fetchDoiBibtex,
