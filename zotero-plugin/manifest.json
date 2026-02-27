@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+  "name": "Search BibTeX",
+  "version": "0.1.0",
+  "description": "从论文PDF中提取元数据，通过多数据源交叉检索BibTeX条目，导入到Zotero文献库中。",
+  "author": "search-bibtex contributors",
+  "homepage_url": "https://github.com/steeliron550-ui/search-bibtex",
+  "applications": {
+    "zotero": {
+      "id": "search-bibtex@zotero.org",
+      "update_url": "https://github.com/steeliron550-ui/search-bibtex/releases/latest/download/update.json",
+      "strict_min_version": "7.0",
+      "strict_max_version": "7.*"
+    }
+  }
+}
