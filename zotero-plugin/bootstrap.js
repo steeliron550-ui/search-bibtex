@@ -32,3 +32,37 @@ function install(data, reason) {
     }
   }
 }
+
+/**
+ * startup()
+ *
+ * Called every time Zotero starts with the plugin enabled, and also right
+ * after `install()` during a fresh installation.  This is where the plugin
+ * should initialise its runtime components: create the top-level object,
+ * register menu items / keyboard shortcuts, hook into Zotero's notifier,
+ * and load any UI panes.
+ *
+ * @param {Object} data - Contains `id`, `version`, `resourceURI`, `rootURI`.
+ * @param {number} reason - Same reason codes as install().
+ */
+function startup(data, reason) {
+  Zotero.log("search-bibtex: startup called (reason=" + reason + ").");
+
+  // Initialise the plugin namespace if it hasn't been created yet.
+  if (!Zotero_SearchBibTeX) {
+    Zotero_SearchBibTeX = {};
+  }
+
+  // Store references that other modules may need at runtime.
+  Zotero_SearchBibTeX.pluginID = data.id;
+  Zotero_SearchBibTeX.version = data.version;
+  Zotero_SearchBibTeX.rootURI = data.rootURI;
+  Zotero_SearchBibTeX.resourceURI = data.resourceURI;
+
+  // Register the right-click menu on Zotero items.
+  if (Zotero_SearchBibTeX.UI) {
+    Zotero_SearchBibTeX.UI.registerItemMenu();
+  }
+
+  Zotero.log("search-bibtex: startup complete.");
+}
