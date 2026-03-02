@@ -108,3 +108,65 @@ Zotero_SearchBibTeX.Core.extractMetadataFromPDF = function (filePath) {
 
   return meta;
 };
+
+/**
+ * buildSearchQuery(metadata)
+ *
+ * Builds a search query string from the extracted metadata.  The function
+ * prioritises DOI (most specific), then arXiv ID, then a cleaned title.
+ * When none of those are available it falls back to a combination of
+ * first-author surname and year.
+ *
+ * @param {Object} metadata - The object returned by extractMetadataFromPDF().
+ * @returns {Object} { query: string, type: 'doi'|'arxiv'|'title'|'author-year'|null }
+ */
+Zotero_SearchBibTeX.Core.buildSearchQuery = function (metadata) {
+  if (!metadata) {
+    return { query: null, type: null };
+  }
+
+  // Best: exact DOI lookup.
+  if (metadata.doi) {
+    return {
+      query: metadata.doi.trim(),
+      type: "doi",
+    };
+  }
+
+  // Second: arXiv ID lookup.
+  if (metadata.arxiv) {
+    return {
+      query: metadata.arxiv.trim(),
+      type: "arxiv",
+    };
+  }
+
+  // Third: cleaned title (strip line-breaks, collapse whitespace).
+  if (metadata.title) {
+    const cleanTitle = metadata.title
+      .replace(/[\r\n]+/g, " ")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+    if (cleanTitle.length > 10) {
+      return {
+        query: cleanTitle,
+        type: "title",
+      };
+    }
+  }
+
+  // Fallback: first-author surname + year (least precise).
+  if (
+    metadata.authors &&
+    metadata.authors.length > 0 &&
+    metadata.year
+  ) {
+    const surname = metadata.authors[0].split(/\s+/).pop();
+    return {
+      query: surname + " " + metadata.year,
+      type: "author-year",
+    };
+  }
+
+  return { query: null, type: null };
+};
