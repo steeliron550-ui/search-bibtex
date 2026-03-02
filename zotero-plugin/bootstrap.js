@@ -66,3 +66,27 @@ function startup(data, reason) {
 
   Zotero.log("search-bibtex: startup complete.");
 }
+
+/**
+ * shutdown()
+ *
+ * Called when Zotero is closing OR when the user disables / removes the
+ * plugin.  All runtime state must be cleaned up here: remove menu items,
+ * unregister notifier callbacks, close any open windows, and tear down UI
+ * panes so that nothing leaks into the next session.
+ *
+ * @param {Object} data - Same metadata object as startup().
+ * @param {number} reason - ADDON_DISABLE(5) or ADDON_UNINSTALL(6) typically.
+ */
+function shutdown(data, reason) {
+  Zotero.log("search-bibtex: shutdown called (reason=" + reason + ").");
+
+  // Remove the right-click menu item if it was registered.
+  if (Zotero_SearchBibTeX && Zotero_SearchBibTeX.UI) {
+    Zotero_SearchBibTeX.UI.unregisterItemMenu();
+  }
+
+  // Null out the namespace so GC can collect everything.
+  Zotero_SearchBibTeX = undefined;
+  Zotero.log("search-bibtex: shutdown complete.");
+}
