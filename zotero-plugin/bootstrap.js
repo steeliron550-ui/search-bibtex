@@ -90,3 +90,32 @@ function shutdown(data, reason) {
   Zotero_SearchBibTeX = undefined;
   Zotero.log("search-bibtex: shutdown complete.");
 }
+
+/**
+ * uninstall()
+ *
+ * Called once when the plugin is permanently removed by the user.  Use this
+ * hook to remove any data that was persisted specifically for the plugin
+ * (e.g. preference branches, cached files, or database entries).  If the
+ * plugin might be re-installed later, consider keeping the prefs so the user
+ * doesn't lose their configuration.
+ *
+ * @param {Object} data - Same metadata object.
+ * @param {number} reason - Should always be ADDON_UNINSTALL(6).
+ */
+function uninstall(data, reason) {
+  Zotero.log("search-bibtex: uninstall called (reason=" + reason + ").");
+
+  if (reason === ADDON_REASON.UNINSTALL) {
+    // Clear plugin-specific preferences so no stale keys remain.
+    if (Zotero.Prefs) {
+      try {
+        Zotero.Prefs.clearBranch("extensions.search-bibtex");
+      } catch (e) {
+        Zotero.log("search-bibtex: could not clear preference branch – " + e);
+      }
+    }
+
+    Zotero.log("search-bibtex: uninstall cleanup complete.");
+  }
+}
