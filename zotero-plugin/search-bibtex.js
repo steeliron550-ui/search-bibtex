@@ -170,3 +170,93 @@ Zotero_SearchBibTeX.Core.buildSearchQuery = function (metadata) {
 
   return { query: null, type: null };
 };
+
+/**
+ * searchAllSources(searchQuery, options)
+ *
+ * Dispatches a query to every configured source in parallel, collects the
+ * results, and attaches per-source error information so the caller can
+ * decide how to handle partial failures.
+ *
+ * Sources are called through the Zotero_SearchBibTeX.Sources module.  If a
+ * source function throws or returns an error the failure is recorded in
+ * `sourceErrors` rather than aborting the whole search.
+ *
+ * @param {Object} searchQuery - { query, type } from buildSearchQuery().
+ * @param {Object} [options] - Optional overrides (e.g. maxResults, timeout).
+ * @returns {Promise<Object>} { results: Array, sourceErrors: Object }
+ */
+Zotero_SearchBibTeX.Core.searchAllSources = async function (
+  searchQuery,
+  options
+) {
+  if (!searchQuery || !searchQuery.query) {
+    return { results: [], sourceErrors: { _empty: "No query to search." } };
+  }
+
+  const sourceErrors = {};
+  const results = [];
+
+  const maxResults = (options && options.maxResults) || 10;
+
+  // List of sources to try.  Order matters – earlier sources get
+  // higher priority during the merge/rank step.
+  const sourceNames = [
+    "doi",
+    "crossref",
+    "dblp",
+    "arxiv",
+    "semanticScholar",
+    "openAlex",
+  ];
+
+  // Fire all source searches concurrently.
+  const promises = sourceNames.map(async function (name) {
+    try {
+      let sourceFn = null;
+      if (
+        Zotero_SearchBibTeX.Sources &&
+        typeof Zotero_SearchBibTeX.Sources[name] === "function"
+      ) {
+        sourceFn = Zotero_SearchBibTeX.Sources[name];
+      }
+
+      if (!sourceFn) {
+        sourceErrors[name] = "Source not available.";
+        return [];
+      }
+
+      const raw = await sourceFn(searchQuery, { maxResults });
+      if (Array.isArray(raw)) {
+        // Tag each result with its source for later ranking.
+        raw.forEach(function (r) {
+          r._source = name;
+        });
+        return raw;
+      }
+      return [];
+    } catch (e) {
+      sourceErrors[name] = String(e);
+      Zotero.log("search-bibtex: source " + name + " error – " + e);
+      return [];
+    }
+  });
+
+  const sourceResults = await Promise.all(promises);
+  for (let i = 0; i < sourceResults.length; i++) {
+    const chunk = sourceResults[i];
+    for (let j = 0; j < chunk.length; j++) {
+      results.push(chunk[j]);
+    }
+  }
+
+  Zotero.log(
+    "search-bibtex: searchAllSources – " +
+      results.length +
+      " total results from " +
+      sourceNames.length +
+      " sources."
+  );
+
+  return { results: results, sourceErrors: sourceErrors };
+};
