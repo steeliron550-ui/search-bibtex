@@ -557,3 +557,128 @@ Zotero_SearchBibTeX.Core.formatCitationKey = function (entry, style) {
     }
   }
 };
+
+/**
+ * importToZoteroCollection(bibtexEntry, collectionName)
+ *
+ * Creates (or updates) a Zotero item from a parsed BibTeX entry and adds
+ * it to the specified collection.  If an item with the same DOI already
+ * exists in the library its metadata is updated in-place instead of
+ * creating a duplicate.
+ *
+ * The function uses Zotero's translator infrastructure to convert the
+ * BibTeX text into a proper item type (journalArticle, conferencePaper,
+ * book, etc.) with all recognised fields populated.
+ *
+ * @param {Object} bibtexEntry - Parsed entry from parseBibtexEntry().
+ * @param {string} [collectionName] - Target Zotero collection name.  If
+ *   omitted the item is created in "My Library" (no collection).
+ * @returns {Promise<number|null>} The Zotero item ID on success, or null.
+ */
+Zotero_SearchBibTeX.Core.importToZoteroCollection = async function (
+  bibtexEntry,
+  collectionName
+) {
+  if (!bibtexEntry || !bibtexEntry.raw) {
+    Zotero.log("search-bibtex: importToZoteroCollection – nothing to import.");
+    return null;
+  }
+
+  try {
+    // --- Resolve / create the target collection -------------------------
+    var collection = null;
+    if (collectionName) {
+      collection = Zotero.Collections.getCollectionByName(collectionName);
+      if (!collection) {
+        collection = new Zotero.Collection();
+        collection.name = collectionName;
+        // Use the user's library root.
+        collection.libraryID = Zotero.Libraries.userLibraryID;
+        await collection.saveTx();
+      }
+    }
+
+    // Check for an existing item with the same DOI.
+    var existingItemID = null;
+    if (bibtexEntry.doi) {
+      var s = new Zotero.Search();
+      s.libraryID = Zotero.Libraries.userLibraryID;
+      s.addCondition("DOI", "is", bibtexEntry.doi);
+      var ids = await s.search();
+      if (ids && ids.length > 0) {
+        existingItemID = ids[0];
+      }
+    }
+
+    // --- Import via translation -----------------------------------------
+    var translate = new Zotero.Translate.Import();
+    translate.setString(bibtexEntry.raw);
+    translate.setTranslator("9cb70025-a888-4a29-a210-93ec52da40d4"); // BibTeX.js
+
+    var translators = await translate.getTranslators();
+    if (translators && translators.length > 0) {
+      translate.setTranslator(translators[0].translatorID);
+    }
+
+    var importedItems = await translate.translate({
+      libraryID: Zotero.Libraries.userLibraryID,
+    });
+
+    if (!importedItems || !importedItems.length) {
+      Zotero.log("search-bibtex: importToZoteroCollection – translation returned no items.");
+      return null;
+    }
+
+    var item = importedItems[0];
+
+    // If there was an existing item, merge into it rather than creating
+    // a duplicate.
+    if (existingItemID) {
+      var existingItem = Zotero.Items.get(existingItemID);
+      if (existingItem) {
+        // Copy key fields from the new import onto the existing item.
+        var fieldsToCopy = [
+          "title",
+          "date",
+          "DOI",
+          "publicationTitle",
+          "volume",
+          "pages",
+          "url",
+          "abstractNote",
+        ];
+        for (var i = 0; i < fieldsToCopy.length; i++) {
+          var f = fieldsToCopy[i];
+          var val = item.getField(f);
+          if (val) {
+            existingItem.setField(f, val);
+          }
+        }
+        await existingItem.saveTx();
+        item = existingItem;
+      }
+    } else {
+      // New item – save it.
+      await item.saveTx();
+    }
+
+    // Add to the target collection.
+    if (collection) {
+      collection.addItem(item.id);
+      await collection.saveTx();
+    }
+
+    Zotero.log(
+      "search-bibtex: importToZoteroCollection – imported item " +
+        item.id +
+        ' ("' +
+        (item.getField("title") || "").substring(0, 50) +
+        '...").'
+    );
+
+    return item.id;
+  } catch (e) {
+    Zotero.log("search-bibtex: importToZoteroCollection error – " + e);
+    return null;
+  }
+};
