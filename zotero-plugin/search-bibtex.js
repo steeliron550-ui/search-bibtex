@@ -451,3 +451,109 @@ Zotero_SearchBibTeX.Core.parseBibtexEntry = function (rawText) {
 
   return entry;
 };
+
+/**
+ * formatCitationKey(entry, style)
+ *
+ * Generates a BibTeX citation key from a parsed entry.  Supported styles:
+ *
+ *   "author-year"  →  FirstAuthorLastNameYear        (e.g. "Smith2023")
+ *   "author-title" →  FirstAuthorLastName_TitleWord  (e.g. "Smith_DeepLearning")
+ *   "short"        →  First4LettersOfTitle + Year     (e.g. "Deep2023" – fallback)
+ *
+ * Default: "author-year".  Non-ASCII characters are transliterated; spaces
+ * and punctuation in the key are collapsed or removed.
+ *
+ * @param {Object} entry - A parsed entry from parseBibtexEntry().
+ * @param {string} [style="author-year"] - Desired key style.
+ * @returns {string} The generated citation key.
+ */
+Zotero_SearchBibTeX.Core.formatCitationKey = function (entry, style) {
+  style = style || "author-year";
+
+  if (!entry) {
+    return "UnknownRef";
+  }
+
+  // --- Helper: strip non-ASCII, collapse whitespace ---------------------
+  function sanitise(str) {
+    if (!str) return "";
+    return str
+      .replace(/[{}"]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  // --- Helper: get first-author last name ------------------------------
+  function firstAuthorLastName() {
+    if (entry.authors && entry.authors.length > 0) {
+      var parts = sanitise(entry.authors[0]).split(/\s+/);
+      return parts[parts.length - 1];
+    }
+    return null;
+  }
+
+  // --- Helper: get first meaningful title word --------------------------
+  function firstTitleWord() {
+    if (!entry.title) return null;
+    var words = sanitise(entry.title).split(/\s+/);
+    // Skip short / stop words.
+    var stop = {
+      a: 1,
+      an: 1,
+      the: 1,
+      on: 1,
+      in: 1,
+      of: 1,
+      and: 1,
+      for: 1,
+      to: 1,
+      with: 1,
+    };
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i].replace(/[^a-zA-Z0-9]/g, "");
+      if (w.length > 2 && !stop[w.toLowerCase()]) {
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      }
+    }
+    // Fallback: just use the first word longer than 1 char.
+    for (var j = 0; j < words.length; j++) {
+      var w2 = words[j].replace(/[^a-zA-Z0-9]/g, "");
+      if (w2.length > 1) {
+        return w2.charAt(0).toUpperCase() + w2.slice(1);
+      }
+    }
+    return null;
+  }
+
+  var year = entry.year || "";
+
+  switch (style) {
+    case "author-title": {
+      var ln = firstAuthorLastName();
+      var tw = firstTitleWord();
+      if (ln && tw) return ln + "_" + tw;
+      if (ln && year) return ln + year;
+      return tw || "UnknownRef";
+    }
+
+    case "short": {
+      var tw2 = firstTitleWord();
+      if (tw2 && year) return tw2 + year;
+      if (tw2) return tw2;
+      return "UnknownRef";
+    }
+
+    case "author-year":
+    default: {
+      var ln2 = firstAuthorLastName();
+      if (ln2 && year) return ln2 + year;
+      if (ln2) return ln2;
+      // Fallback: use first title word + year or just "UnknownRef".
+      var tw3 = firstTitleWord();
+      if (tw3 && year) return tw3 + year;
+      if (tw3) return tw3;
+      return "UnknownRef";
+    }
+  }
+};
