@@ -260,3 +260,101 @@ Zotero_SearchBibTeX.Core.searchAllSources = async function (
 
   return { results: results, sourceErrors: sourceErrors };
 };
+
+/**
+ * mergeAndRankResults(results, queryType)
+ *
+ * Deduplicates results by DOI (preferred) or title similarity, then sorts
+ * them according to source priority and field completeness so the most
+ * reliable entry appears first.
+ *
+ * Source priority (higher = preferred): doi > crossref > dblp > arxiv >
+ * semanticScholar > openAlex.
+ *
+ * @param {Array} results - Flat array of result objects from all sources.
+ * @param {string} queryType - The `type` field from buildSearchQuery().
+ * @returns {Array} Deduplicated, ranked result array.
+ */
+Zotero_SearchBibTeX.Core.mergeAndRankResults = function (results, queryType) {
+  if (!results || !results.length) {
+    return [];
+  }
+
+  // --- Source priority lookup -------------------------------------------
+  var sourceOrder = {
+    doi: 6,
+    crossref: 5,
+    dblp: 4,
+    arxiv: 3,
+    semanticScholar: 2,
+    openAlex: 1,
+  };
+
+  // --- Deduplicate by DOI -----------------------------------------------
+  var seenDoi = {};
+  var deduped = [];
+
+  for (var i = 0; i < results.length; i++) {
+    var r = results[i];
+
+    if (r.doi) {
+      var key = r.doi.toLowerCase().trim();
+      if (seenDoi[key]) {
+        // Keep the entry from the higher-priority source.
+        var existing = seenDoi[key];
+        var existingSrc = sourceOrder[existing._source] || 0;
+        var currentSrc = sourceOrder[r._source] || 0;
+        if (currentSrc > existingSrc) {
+          // Replace.
+          var idx = deduped.indexOf(existing);
+          if (idx >= 0) {
+            deduped[idx] = r;
+          }
+          seenDoi[key] = r;
+        }
+        continue;
+      }
+      seenDoi[key] = r;
+    }
+
+    deduped.push(r);
+  }
+
+  // --- Compute completeness score ---------------------------------------
+  // Each field contributes to the score: title(3), authors(2), year(1),
+  // doi(3), journal/booktitle(2), volume+pages(1).
+  deduped.forEach(function (entry) {
+    var score = 0;
+    if (entry.title) score += 3;
+    if (entry.author || entry.authors) score += 2;
+    if (entry.year || entry.date) score += 1;
+    if (entry.doi) score += 3;
+    if (entry.journal || entry.booktitle || entry.publicationTitle)
+      score += 2;
+    if (entry.volume || entry.pages) score += 1;
+
+    entry._completeness = score;
+  });
+
+  // --- Sort: source priority first, then completeness -------------------
+  deduped.sort(function (a, b) {
+    var srcA = sourceOrder[a._source] || 0;
+    var srcB = sourceOrder[b._source] || 0;
+    if (srcB !== srcA) {
+      return srcB - srcA; // higher priority first
+    }
+    var compA = a._completeness || 0;
+    var compB = b._completeness || 0;
+    return compB - compA;
+  });
+
+  Zotero.log(
+    "search-bibtex: mergeAndRankResults – " +
+      deduped.length +
+      " unique results after dedup (had " +
+      results.length +
+      " raw)."
+  );
+
+  return deduped;
+};
