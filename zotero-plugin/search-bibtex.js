@@ -358,3 +358,96 @@ Zotero_SearchBibTeX.Core.mergeAndRankResults = function (results, queryType) {
 
   return deduped;
 };
+
+/**
+ * parseBibtexEntry(rawText)
+ *
+ * Parses a raw BibTeX string into a structured object suitable for
+ * creating or updating a Zotero item via the API.
+ *
+ * Recognised fields are mapped to Zotero's CSL-style keys so they can be
+ * passed directly to `Zotero.Items.set(item, fields)` or a translator.
+ *
+ * @param {string} rawText - A single BibTeX entry as a string.
+ * @returns {Object} Parsed entry with keys: entryType, citationKey, title,
+ *   authors (string[]), year, doi, journal, booktitle, volume, pages, url,
+ *   abstract, and a `raw` copy of the input.
+ */
+Zotero_SearchBibTeX.Core.parseBibtexEntry = function (rawText) {
+  if (!rawText) {
+    return null;
+  }
+
+  var entry = {
+    entryType: null,
+    citationKey: null,
+    title: null,
+    authors: [],
+    year: null,
+    doi: null,
+    journal: null,
+    booktitle: null,
+    volume: null,
+    pages: null,
+    url: null,
+    abstract: null,
+    raw: rawText,
+  };
+
+  try {
+    // --- Entry type and citation key ------------------------------------
+    var typeMatch = rawText.match(
+      /@(\w+)\s*\{\s*([^,\s]+)/
+    );
+    if (typeMatch) {
+      entry.entryType = typeMatch[1].toLowerCase();
+      entry.citationKey = typeMatch[2];
+    }
+
+    // --- Field extraction helper ----------------------------------------
+    function getField(name) {
+      // BibTeX fields are case-insensitive; match "field = {value}" or
+      // "field = "value"".
+      var re = new RegExp(
+        name +
+          '\\s*=\\s*[{"]([^}"]*)[}"]',
+        "i"
+      );
+      var m = rawText.match(re);
+      return m ? m[1].trim() : null;
+    }
+
+    entry.title = getField("title");
+    entry.doi = getField("doi");
+    entry.journal = getField("journal");
+    entry.booktitle = getField("booktitle");
+    entry.volume = getField("volume");
+    entry.pages = getField("pages");
+    entry.url = getField("url");
+    entry.abstract = getField("abstract");
+
+    // Year can appear as `year` or `date`.
+    var yearStr = getField("year") || getField("date");
+    if (yearStr) {
+      var yearNum = parseInt(yearStr.match(/\d{4}/), 10);
+      if (!isNaN(yearNum)) {
+        entry.year = yearNum;
+      }
+    }
+
+    // Authors: split on " and " (standard BibTeX convention).
+    var authorStr = getField("author");
+    if (authorStr) {
+      entry.authors = authorStr
+        .split(/\s+and\s+/)
+        .map(function (a) {
+          return a.replace(/[{}]/g, "").trim();
+        })
+        .filter(Boolean);
+    }
+  } catch (e) {
+    Zotero.log("search-bibtex: parseBibtexEntry error – " + e);
+  }
+
+  return entry;
+};
