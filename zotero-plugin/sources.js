@@ -161,3 +161,122 @@ Zotero_SearchBibTeX.Sources.crossref = async function (searchQuery, options) {
     throw new Error("Crossref source failed: " + e);
   }
 };
+
+/**
+ * dblp(searchQuery, options)
+ *
+ * Queries the DBLP Search API (https://dblp.org/search/publ/api).  DBLP
+ * returns XML and is most useful for computer-science papers.  This
+ * function parses the XML response and normalises the hits.
+ *
+ * @param {Object} searchQuery - { query, type }
+ * @param {Object} [options] - e.g. { maxResults: 10 }
+ * @returns {Promise<Array>} Array of normalised result objects.
+ */
+Zotero_SearchBibTeX.Sources.dblp = async function (searchQuery, options) {
+  if (!searchQuery || !searchQuery.query) {
+    return [];
+  }
+
+  var maxResults = (options && options.maxResults) || 10;
+  var q = encodeURIComponent(searchQuery.query);
+
+  var url =
+    "https://dblp.org/search/publ/api?q=" +
+    q +
+    "&format=xml&h=" +
+    maxResults;
+
+  try {
+    var resp = await Zotero.HTTP.request("GET", url, {
+      headers: { Accept: "application/xml" },
+      responseType: "text",
+      timeout: (options && options.timeout) || 15000,
+    });
+
+    if (
+      !resp ||
+      !resp.response ||
+      resp.status < 200 ||
+      resp.status >= 300
+    ) {
+      return [];
+    }
+
+    // Simple XML parsing using regex (DBLP's XML is straightforward enough).
+    var xml = resp.response;
+    var hitRegex =
+      /<hit[^>]*>([\s\S]*?)<\/hit>/g;
+    var results = [];
+    var match;
+
+    while ((match = hitRegex.exec(xml)) !== null) {
+      if (results.length >= maxResults) break;
+      var hitXml = match[1];
+
+      var result = {
+        title: null,
+        authors: [],
+        year: null,
+        doi: null,
+        journal: null,
+        booktitle: null,
+        volume: null,
+        pages: null,
+        url: null,
+        abstract: null,
+        entryType: null,
+        _source: "dblp",
+      };
+
+      // Title
+      var tMatch = hitXml.match(/<title>([\s\S]*?)<\/title>/);
+      if (tMatch) {
+        result.title = tMatch[1]
+          .replace(/<[^>]+>/g, "")
+          .trim();
+      }
+
+      // Authors
+      var aRegex = /<author>([\s\S]*?)<\/author>/g;
+      var aMatch;
+      while ((aMatch = aRegex.exec(hitXml)) !== null) {
+        result.authors.push(
+          aMatch[1].replace(/<[^>]+>/g, "").trim()
+        );
+      }
+
+      // Year
+      var yMatch = hitXml.match(/<year>(\d{4})<\/year>/);
+      if (yMatch) {
+        result.year = parseInt(yMatch[1], 10);
+      }
+
+      // DOI
+      var dMatch = hitXml.match(/<doi>([\s\S]*?)<\/doi>/);
+      if (dMatch) {
+        result.doi = dMatch[1].trim();
+      }
+
+      // Venue (journal or booktitle depending on the hit type)
+      var vMatch = hitXml.match(/<venue>([\s\S]*?)<\/venue>/);
+      if (vMatch) {
+        result.journal = vMatch[1]
+          .replace(/<[^>]+>/g, "")
+          .trim();
+      }
+
+      // URL
+      var uMatch = hitXml.match(/<url>([\s\S]*?)<\/url>/);
+      if (uMatch) {
+        result.url = uMatch[1].trim();
+      }
+
+      results.push(result);
+    }
+
+    return results;
+  } catch (e) {
+    throw new Error("DBLP source failed: " + e);
+  }
+};
