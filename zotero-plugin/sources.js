@@ -409,3 +409,106 @@ Zotero_SearchBibTeX.Sources.arxiv = async function (searchQuery, options) {
     throw new Error("arXiv source failed: " + e);
   }
 };
+
+/**
+ * semanticScholar(searchQuery, options)
+ *
+ * Queries the Semantic Scholar Academic Graph API
+ * (https://api.semanticscholar.org/graph/v1/paper/search).  This source
+ * covers a wide range of disciplines and provides good title/abstract
+ * matching even with partial queries.
+ *
+ * @param {Object} searchQuery - { query, type }
+ * @param {Object} [options] - e.g. { maxResults: 10 }
+ * @returns {Promise<Array>} Array of normalised result objects.
+ */
+Zotero_SearchBibTeX.Sources.semanticScholar = async function (
+  searchQuery,
+  options
+) {
+  if (!searchQuery || !searchQuery.query) {
+    return [];
+  }
+
+  var maxResults = (options && options.maxResults) || 10;
+  var q = encodeURIComponent(searchQuery.query);
+
+  var url =
+    "https://api.semanticscholar.org/graph/v1/paper/search?query=" +
+    q +
+    "&limit=" +
+    maxResults +
+    "&fields=title,authors,year,externalIds,journal,venue,url,abstract,publicationTypes";
+
+  try {
+    var resp = await Zotero.HTTP.request("GET", url, {
+      headers: { Accept: "application/json" },
+      responseType: "json",
+      timeout: (options && options.timeout) || 15000,
+    });
+
+    if (
+      !resp ||
+      !resp.response ||
+      resp.status < 200 ||
+      resp.status >= 300
+    ) {
+      return [];
+    }
+
+    var papers = resp.response.data || [];
+
+    return papers.slice(0, maxResults).map(function (paper) {
+      var result = {
+        title: paper.title || null,
+        authors: [],
+        year: paper.year || null,
+        doi: null,
+        journal: null,
+        booktitle: null,
+        volume: null,
+        pages: null,
+        url: paper.url || null,
+        abstract: paper.abstract || null,
+        entryType: null,
+        _source: "semanticScholar",
+      };
+
+      // Authors.
+      if (Array.isArray(paper.authors)) {
+        result.authors = paper.authors.map(function (a) {
+          return a.name || "";
+        });
+      }
+
+      // DOI from externalIds.
+      if (paper.externalIds && paper.externalIds.DOI) {
+        result.doi = paper.externalIds.DOI;
+      }
+
+      // Venue / journal.
+      if (paper.journal && paper.journal.name) {
+        result.journal = paper.journal.name;
+      }
+      if (
+        paper.venue &&
+        paper.venue.name &&
+        !result.journal
+      ) {
+        result.journal = paper.venue.name;
+      }
+
+      // Publication type → entryType.
+      if (
+        Array.isArray(paper.publicationTypes) &&
+        paper.publicationTypes.length > 0
+      ) {
+        result.entryType = paper.publicationTypes[0];
+      }
+
+      return result;
+    });
+  } catch (e) {
+    throw new Error("Semantic Scholar source failed: " + e);
+  }
+};
