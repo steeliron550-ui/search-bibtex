@@ -512,3 +512,126 @@ Zotero_SearchBibTeX.Sources.semanticScholar = async function (
     throw new Error("Semantic Scholar source failed: " + e);
   }
 };
+
+/**
+ * openAlex(searchQuery, options)
+ *
+ * Queries the OpenAlex REST API (https://api.openalex.org/works).  OpenAlex
+ * provides a large open-access index of scholarly works with DOI, title,
+ * and keyword search capabilities.  This source is especially useful as a
+ * fallback for papers outside the computer-science domain.
+ *
+ * @param {Object} searchQuery - { query, type }
+ * @param {Object} [options] - e.g. { maxResults: 10 }
+ * @returns {Promise<Array>} Array of normalised result objects.
+ */
+Zotero_SearchBibTeX.Sources.openAlex = async function (searchQuery, options) {
+  if (!searchQuery || !searchQuery.query) {
+    return [];
+  }
+
+  var maxResults = (options && options.maxResults) || 10;
+  var q = encodeURIComponent(searchQuery.query);
+
+  var filterParam = "";
+  if (searchQuery.type === "doi") {
+    filterParam = "&filter=doi:" + encodeURIComponent(searchQuery.query);
+  } else if (searchQuery.type === "title") {
+    filterParam =
+      "&filter=title.search:" + encodeURIComponent(searchQuery.query);
+  } else {
+    filterParam =
+      "&search=" + encodeURIComponent(searchQuery.query);
+  }
+
+  var url =
+    "https://api.openalex.org/works?per_page=" +
+    maxResults +
+    filterParam;
+
+  try {
+    var resp = await Zotero.HTTP.request("GET", url, {
+      headers: { Accept: "application/json" },
+      responseType: "json",
+      timeout: (options && options.timeout) || 15000,
+    });
+
+    if (
+      !resp ||
+      !resp.response ||
+      resp.status < 200 ||
+      resp.status >= 300
+    ) {
+      return [];
+    }
+
+    var works = resp.response.results || resp.response.data || [];
+
+    return works.slice(0, maxResults).map(function (work) {
+      var result = {
+        title: work.title || work.display_name || null,
+        authors: [],
+        year: work.publication_year || null,
+        doi: work.doi
+          ? work.doi.replace("https://doi.org/", "")
+          : null,
+        journal: null,
+        booktitle: null,
+        volume: null,
+        pages: null,
+        url: work.doi
+          ? "https://doi.org/" + work.doi.replace("https://doi.org/", "")
+          : null,
+        abstract: null,
+        entryType: work.type || null,
+        _source: "openAlex",
+      };
+
+      // Authorships.
+      if (Array.isArray(work.authorships)) {
+        result.authors = work.authorships.map(function (auth) {
+          return (
+            (auth.author && auth.author.display_name) || ""
+          );
+        });
+      }
+
+      // Primary location → source (journal).
+      if (
+        work.primary_location &&
+        work.primary_location.source &&
+        work.primary_location.source.display_name
+      ) {
+        result.journal =
+          work.primary_location.source.display_name;
+      }
+
+      // Abstract from inverted index (reconstruct if present).
+      if (
+        work.abstract_inverted_index &&
+        typeof work.abstract_inverted_index === "object"
+      ) {
+        try {
+          var idx = work.abstract_inverted_index;
+          var words = [];
+          var keys = Object.keys(idx);
+          for (var i = 0; i < keys.length; i++) {
+            var positions = idx[keys[i]];
+            if (Array.isArray(positions)) {
+              for (var p = 0; p < positions.length; p++) {
+                words[positions[p]] = keys[i];
+              }
+            }
+          }
+          result.abstract = words.join(" ");
+        } catch (_) {
+          // Leave abstract null if reconstruction fails.
+        }
+      }
+
+      return result;
+    });
+  } catch (e) {
+    throw new Error("OpenAlex source failed: " + e);
+  }
+};
