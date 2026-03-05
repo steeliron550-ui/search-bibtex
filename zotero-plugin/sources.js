@@ -280,3 +280,132 @@ Zotero_SearchBibTeX.Sources.dblp = async function (searchQuery, options) {
     throw new Error("DBLP source failed: " + e);
   }
 };
+
+/**
+ * arxiv(searchQuery, options)
+ *
+ * Queries the arXiv API (https://export.arxiv.org/api/query).  This source
+ * is best for pre-prints; it returns Atom XML which this function parses
+ * into the normalised result format.
+ *
+ * @param {Object} searchQuery - { query, type }
+ * @param {Object} [options] - e.g. { maxResults: 10 }
+ * @returns {Promise<Array>} Array of normalised result objects.
+ */
+Zotero_SearchBibTeX.Sources.arxiv = async function (searchQuery, options) {
+  if (!searchQuery || !searchQuery.query) {
+    return [];
+  }
+
+  var maxResults = (options && options.maxResults) || 10;
+  var q = encodeURIComponent(searchQuery.query);
+
+  var url =
+    "https://export.arxiv.org/api/query?search_query=all:" +
+    q +
+    "&start=0&max_results=" +
+    maxResults;
+
+  try {
+    var resp = await Zotero.HTTP.request("GET", url, {
+      headers: { Accept: "application/atom+xml" },
+      responseType: "text",
+      timeout: (options && options.timeout) || 15000,
+    });
+
+    if (
+      !resp ||
+      !resp.response ||
+      resp.status < 200 ||
+      resp.status >= 300
+    ) {
+      return [];
+    }
+
+    var xml = resp.response;
+
+    // Split by <entry> – each is one paper.
+    var entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+    var results = [];
+    var match;
+
+    while ((match = entryRegex.exec(xml)) !== null) {
+      if (results.length >= maxResults) break;
+      var entryXml = match[1];
+
+      var result = {
+        title: null,
+        authors: [],
+        year: null,
+        doi: null,
+        journal: null,
+        booktitle: null,
+        volume: null,
+        pages: null,
+        url: null,
+        abstract: null,
+        entryType: "article",
+        _source: "arxiv",
+      };
+
+      // Title
+      var tMatch = entryXml.match(
+        /<title[^>]*>([\s\S]*?)<\/title>/
+      );
+      if (tMatch) {
+        result.title = tMatch[1]
+          .replace(/<[^>]+>/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      // Authors
+      var aRegex = /<author>[\s\S]*?<name>([\s\S]*?)<\/name>[\s\S]*?<\/author>/g;
+      var aMatch;
+      while ((aMatch = aRegex.exec(entryXml)) !== null) {
+        result.authors.push(aMatch[1].trim());
+      }
+
+      // Summary / abstract
+      var sMatch = entryXml.match(
+        /<summary[^>]*>([\s\S]*?)<\/summary>/
+      );
+      if (sMatch) {
+        result.abstract = sMatch[1]
+          .replace(/<[^>]+>/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      // Published date → year
+      var dMatch = entryXml.match(
+        /<published[^>]*>(\d{4})/
+      );
+      if (dMatch) {
+        result.year = parseInt(dMatch[1], 10);
+      }
+
+      // DOI (optional in arXiv)
+      var doiMatch = entryXml.match(
+        /<arxiv:doi[^>]*>([\s\S]*?)<\/arxiv:doi>/
+      );
+      if (doiMatch) {
+        result.doi = doiMatch[1].trim();
+      }
+
+      // URL / ID
+      var idMatch = entryXml.match(
+        /<id[^>]*>([\s\S]*?)<\/id>/
+      );
+      if (idMatch) {
+        result.url = idMatch[1].trim();
+      }
+
+      results.push(result);
+    }
+
+    return results;
+  } catch (e) {
+    throw new Error("arXiv source failed: " + e);
+  }
+};
