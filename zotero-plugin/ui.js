@@ -43,3 +43,15 @@ Zotero_SearchBibTeX.UI.registerItemMenu = function () {
 
   Zotero.log("search-bibtex: registerItemMenu – context menu registered.");
 };
+
+/**
+ * unregisterItemMenu()
+ *
+ * Removes the "Search BibTeX" context-menu entry.  Must be called during
+ * `shutdown()` so the menu does not persist after the plugin is disabled
+ * or unloaded.
+ */
+Zotero_SearchBibTeX.UI.unregisterItemMenu = function () {
+  Zotero.Menus.unregister("item", "search-bibtex-from-pdf");
+  Zotero.log("search-bibtex: unregisterItemMenu – context menu removed.");
+};
