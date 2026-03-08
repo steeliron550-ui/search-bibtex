@@ -193,3 +193,103 @@ Zotero_SearchBibTeX.UI.onSearchFromPDF = async function (target) {
     );
   }
 };
+
+/**
+ * showSearchResultsDialog(parentWindow, metadata, results)
+ *
+ * Opens a modal dialog that lists the search results and lets the user
+ * pick one to import into their Zotero library.  Each row shows the
+ * title, source, year, and a button to import.
+ *
+ * The dialog also provides a text field at the top for manual title
+ * search, so the user can refine the query without returning to the
+ * Zotero main window.
+ *
+ * @param {ChromeWindow|null} parentWindow - Parent window (null = main).
+ * @param {Object|null} metadata - Extracted metadata for display.
+ * @param {Array|string} resultsOrTitle - Ranked results array, or a title
+ *   string for manual search.
+ */
+Zotero_SearchBibTeX.UI.showSearchResultsDialog = function (
+  parentWindow,
+  metadata,
+  resultsOrTitle
+) {
+  var win = parentWindow || Zotero.getMainWindow();
+
+  // Determine whether we have results or just a title string.
+  var results = Array.isArray(resultsOrTitle) ? resultsOrTitle : null;
+  var manualTitle =
+    typeof resultsOrTitle === "string" ? resultsOrTitle : null;
+
+  // Build the dialog content dynamically.
+  var dialog = win.openDialog(
+    "chrome://search-bibtex/content/search-results.xhtml",
+    "search-bibtex-results",
+    "chrome,modal,resizable,centerscreen",
+    {
+      metadata: metadata,
+      results: results,
+      manualTitle: manualTitle,
+    }
+  );
+
+  if (!dialog) {
+    Zotero.log(
+      "search-bibtex: showSearchResultsDialog – dialog open failed."
+    );
+    return;
+  }
+
+  // When the dialog closes, check which entry (if any) the user selected.
+  dialog.addEventListener("close", function (event) {
+    var selected = dialog.returnValue;
+    if (!selected) {
+      return; // User cancelled.
+    }
+
+    // Import the selected entry.
+    var progress = new Zotero.ProgressWindow();
+    progress.changeHeadline("Search BibTeX – Importing…");
+    progress.show();
+
+    Zotero_SearchBibTeX.Core.importToZoteroCollection(selected, null)
+      .then(function (itemID) {
+        progress.close();
+        if (itemID) {
+          Zotero.alert(
+            null,
+            "Search BibTeX",
+            'Successfully imported "' +
+              (selected.title || "Untitled").substring(
+                0,
+                60
+              ) +
+              '".'
+          );
+          // Select the newly imported item in the Zotero pane.
+          var zp = Zotero.getActiveZoteroPane();
+          if (zp) {
+            zp.selectItem(itemID);
+          }
+        } else {
+          Zotero.alert(
+            null,
+            "Search BibTeX",
+            "Import failed.  Check the Error Console for details."
+          );
+        }
+      })
+      .catch(function (e) {
+        progress.close();
+        Zotero.log(
+          "search-bibtex: import error – " + e
+        );
+        Zotero.alert(
+          null,
+          "Search BibTeX Error",
+          "Import failed: " + e
+        );
+      });
+  });
+};
