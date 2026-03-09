@@ -86,3 +86,26 @@ Zotero_SearchBibTeX.Prefs.set = function (key, value) {
     Zotero.log("search-bibtex: Prefs.set error for " + key + " – " + e);
   }
 };
+
+/**
+ * getSourcePriority()
+ *
+ * Reads the `sourceOrder` preference and returns it as an array of source
+ * names.  The order determines which sources are tried first and how much
+ * weight each source carries during merge/rank.
+ *
+ * @returns {string[]} e.g. ["doi","crossref","dblp","arxiv","semanticScholar","openAlex"]
+ */
+Zotero_SearchBibTeX.Prefs.getSourcePriority = function () {
+  var raw = Zotero_SearchBibTeX.Prefs.get("sourceOrder");
+  if (!raw || typeof raw !== "string") {
+    return ["doi", "crossref", "dblp", "arxiv", "semanticScholar", "openAlex"];
+  }
+
+  return raw
+    .split(",")
+    .map(function (s) {
+      return s.trim();
+    })
+    .filter(Boolean);
+};
