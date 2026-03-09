@@ -70,3 +70,19 @@ Zotero_SearchBibTeX.Prefs.get = function (key) {
     return undefined;
   }
 };
+
+/**
+ * set(key, value)
+ *
+ * Writes a single plugin preference.
+ *
+ * @param {string} key - Preference short name.
+ * @param {*} value - Value to store (string, number, boolean).
+ */
+Zotero_SearchBibTeX.Prefs.set = function (key, value) {
+  try {
+    Zotero.Prefs.set(PREFS_BRANCH + "." + key, value);
+  } catch (e) {
+    Zotero.log("search-bibtex: Prefs.set error for " + key + " – " + e);
+  }
+};
