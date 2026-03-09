@@ -52,3 +52,21 @@ Zotero_SearchBibTeX.Prefs.registerDefaults = function () {
 
   Zotero.log("search-bibtex: registerDefaults – defaults registered.");
 };
+
+/**
+ * get(key)
+ *
+ * Reads a single plugin preference.  The `key` is the short name (e.g.
+ * "maxResults"), not the full preference-branch path.
+ *
+ * @param {string} key - Preference short name.
+ * @returns {*} The stored value, or `undefined` if not set.
+ */
+Zotero_SearchBibTeX.Prefs.get = function (key) {
+  try {
+    return Zotero.Prefs.get(PREFS_BRANCH + "." + key);
+  } catch (e) {
+    Zotero.log("search-bibtex: Prefs.get error for " + key + " – " + e);
+    return undefined;
+  }
+};
