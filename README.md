@@ -1,4 +1,4 @@
-# search-bibtex / 论文引用元数据检索工具
+# PolyCite / 论文引用元数据检索工具
 
 [**English**](README.en.md) | **中文**
 
