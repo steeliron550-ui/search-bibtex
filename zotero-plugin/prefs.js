@@ -109,3 +109,23 @@ Zotero_SearchBibTeX.Prefs.getSourcePriority = function () {
     })
     .filter(Boolean);
 };
+
+/**
+ * getMaxResults()
+ *
+ * Reads the `maxResults` preference, clamping it to a safe range so that
+ * a misconfiguration doesn't cause unreasonably large API responses.
+ *
+ * @returns {number} Integer between 1 and 50 (inclusive).
+ */
+Zotero_SearchBibTeX.Prefs.getMaxResults = function () {
+  var val = Zotero_SearchBibTeX.Prefs.get("maxResults");
+  var num = parseInt(val, 10);
+  if (isNaN(num) || num < 1) {
+    return 10; // default
+  }
+  if (num > 50) {
+    return 50;
+  }
+  return num;
+};
