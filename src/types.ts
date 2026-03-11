@@ -1,3 +1,12 @@
+/**
+ * types.ts — Core type definitions for search-bibtex.
+ *
+ * This module defines the canonical shapes for bibliographic metadata,
+ * search queries, results, source errors, and ranking preferences.
+ * Every other module imports its contracts from here so the compiler can
+ * enforce consistency across the system.
+ */
+
 export const builtinPaperSources = [
   "dblp",
   "arxiv",
