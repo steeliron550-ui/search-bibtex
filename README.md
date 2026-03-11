@@ -1,4 +1,4 @@
-# PolyCite / 论文引用元数据检索工具
+# PolyCite / 基于多智能体协同、多源汇聚的论文引用元数据检索工具
 
 [**English**](README.en.md) | **中文**
 
