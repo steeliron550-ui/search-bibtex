@@ -26,6 +26,10 @@ export type BuiltinPaperSource = typeof builtinPaperSources[number];
  */
 export type PaperSource = string;
 
+/**
+ * Per-field scoring weights used when ranking bibliographic candidates.
+ * All values should be between 0 and 1; the total does not need to sum to 1.
+ */
 export interface SortWeights {
   title: number;
   author: number;
@@ -34,6 +38,10 @@ export interface SortWeights {
   source: number;
 }
 
+/**
+ * User-facing search preferences that control which sources are queried,
+ * how results are weighted, and how many candidates to return.
+ */
 export interface SearchPreferences {
   sourcePriority: PaperSource[];
   weights: SortWeights;
