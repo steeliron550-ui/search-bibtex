@@ -25,14 +25,25 @@ export interface SourceSearchContext {
   limit: number;
 }
 
+/**
+ * Context passed to a source's optional `fetchBibtex()` function.
+ * Extends the base fetch request options with the fetcher to use.
+ */
 export interface SourceBibtexContext extends FetchRequestOptions {
   fetcher: FetchLike;
 }
 
+/**
+ * A registered search source.  The `search()` function performs a search
+ * against the source's API; the optional `fetchBibtex()` function retrieves
+ * formatted BibTeX for a specific record if the source provides one
+ * directly (e.g. DBLP or DOI content negotiation).
+ */
 export interface SearchSource {
   name: PaperSource;
   search: (context: SourceSearchContext) => Promise<BibliographicCandidate[]>;
   fetchBibtex?: (record: BibtexRecord, context: SourceBibtexContext) => Promise<string>;
 }
 
+/** Maps source names to their SearchSource implementations. */
 export type SearchSourceRegistry = Map<PaperSource, SearchSource>;
