@@ -76,6 +76,11 @@ export interface PdfMetadataCandidate {
   textSample: string;
 }
 
+/**
+ * Raw PDF text snapshot returned by the PDF parsing layer.
+ * Contains the full text of the first N pages plus document metadata
+ * extracted from the PDF info dictionary.
+ */
 export interface PdfDocumentSnapshot {
   filePath: string;
   pageCount: number;
@@ -89,8 +94,17 @@ export interface PdfDocumentSnapshot {
   lines: string[];
 }
 
+/**
+ * The kind of query used to search a bibliographic source.
+ * More specific kinds (doi, arxiv) yield higher-confidence matches.
+ */
 export type SearchQueryKind = "doi" | "arxiv" | "title" | "title-author";
 
+/**
+ * A single search query candidate derived from extracted metadata,
+ * tagged with its kind and a confidence score (0–1) indicating how
+ * reliable the source of the query value is.
+ */
 export interface SearchQueryCandidate {
   kind: SearchQueryKind;
   value: string;
