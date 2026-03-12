@@ -111,6 +111,10 @@ export interface SearchQueryCandidate {
   confidence: number;
 }
 
+/**
+ * A ranked, scored bibliographic result from a single source.
+ * Includes the raw BibTeX string that can be written directly to a .bib file.
+ */
 export interface SearchResult {
   source: PaperSource;
   sourceId?: string;
@@ -124,16 +128,28 @@ export interface SearchResult {
   matchedQuery: SearchQueryKind;
   score: number;
   scoreBreakdown: ScoreBreakdown;
+  /** Raw BibTeX entry text returned by the source. */
   bibtex: string;
 }
 
+/**
+ * Captures a non-fatal error from a single source during a multi-source
+ * search, so the caller can report partial failures without losing the
+ * results from sources that succeeded.
+ */
 export interface SearchSourceError {
   source: PaperSource;
   query: string;
   message: string;
+  /** HTTP status code if the error came from an HTTP response. */
   status?: number;
 }
 
+/**
+ * Top-level response from a bibliographic search.
+ * Contains the extracted metadata, generated queries, ranked results,
+ * and any per-source errors encountered during the search.
+ */
 export interface SearchResponse {
   metadata: PdfMetadataCandidate;
   queries: SearchQueryCandidate[];
