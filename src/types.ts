@@ -48,6 +48,10 @@ export interface SearchPreferences {
   limit: number;
 }
 
+/**
+ * Detailed per-field scores for a single bibliographic candidate,
+ * computed by the ranking module.
+ */
 export interface ScoreBreakdown {
   title: number;
   author: number;
@@ -56,6 +60,10 @@ export interface ScoreBreakdown {
   source: number;
 }
 
+/**
+ * Metadata extracted from a PDF file (or constructed from a title string)
+ * that is used to generate search queries against bibliographic sources.
+ */
 export interface PdfMetadataCandidate {
   filePath: string;
   pageCount: number;
@@ -64,6 +72,7 @@ export interface PdfMetadataCandidate {
   year?: number;
   doi?: string;
   arxivId?: string;
+  /** First ~1200 characters of the PDF text for debugging and fallback matching. */
   textSample: string;
 }
 
