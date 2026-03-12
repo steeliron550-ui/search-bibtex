@@ -7,6 +7,7 @@
  * enforce consistency across the system.
  */
 
+/** Canonical list of built-in bibliographic data sources. */
 export const builtinPaperSources = [
   "dblp",
   "arxiv",
@@ -16,8 +17,13 @@ export const builtinPaperSources = [
   "semantic-scholar"
 ] as const;
 
+/** Union of the string literals naming each built-in source. */
 export type BuiltinPaperSource = typeof builtinPaperSources[number];
 
+/**
+ * A paper source identifier — either a built-in constant or a custom
+ * source name supplied by the user in `config.toml`.
+ */
 export type PaperSource = string;
 
 export interface SortWeights {
