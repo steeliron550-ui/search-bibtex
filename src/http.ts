@@ -1,3 +1,11 @@
+/**
+ * http.ts — Lightweight HTTP fetch wrappers for bibliographic APIs.
+ *
+ * Provides typed helpers for JSON and text fetches, a custom error class
+ * that tracks HTTP status codes, and a utility for converting fetch errors
+ * into the canonical SearchSourceError shape.
+ */
+
 import type { PaperSource, SearchSourceError } from "./types.js";
 
 export type FetchLike = typeof fetch;
