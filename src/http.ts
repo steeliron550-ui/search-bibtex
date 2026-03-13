@@ -14,8 +14,14 @@ export interface FetchRequestOptions {
   signal?: AbortSignal;
 }
 
+/** User-Agent header sent with every outgoing HTTP request. */
 const USER_AGENT = "search-bibtex/0.1 (mailto:codex@local)";
 
+/**
+ * Error thrown when an HTTP request fails with a non-2xx status code.
+ * Carries the failing URL and the HTTP status so callers can decide
+ * whether to retry or report the failure.
+ */
 export class HttpRequestError extends Error {
   readonly status?: number;
   readonly url: string;
