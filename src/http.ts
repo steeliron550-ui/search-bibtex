@@ -79,6 +79,10 @@ export async function fetchText(
   return response.text();
 }
 
+/**
+ * Converts any caught error into a SearchSourceError, preserving the HTTP
+ * status code when the error is an HttpRequestError.
+ */
 export function toSourceError(source: PaperSource, query: string, error: unknown): SearchSourceError {
   if (error instanceof HttpRequestError) {
     return {
