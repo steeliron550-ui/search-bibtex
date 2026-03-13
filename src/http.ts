@@ -54,6 +54,10 @@ export async function fetchJson<T>(fetcher: FetchLike, url: string, options: Fet
   return (await response.json()) as T;
 }
 
+/**
+ * Fetches a URL with a custom Accept header and returns the response body
+ * as plain text.  Throws HttpRequestError on non-2xx responses.
+ */
 export async function fetchText(
   fetcher: FetchLike,
   url: string,
