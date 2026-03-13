@@ -34,6 +34,10 @@ export class HttpRequestError extends Error {
   }
 }
 
+/**
+ * Fetches a URL, parses the response body as JSON, and returns the typed
+ * result.  Throws HttpRequestError on non-2xx responses.
+ */
 export async function fetchJson<T>(fetcher: FetchLike, url: string, options: FetchRequestOptions = {}): Promise<T> {
   const response = await fetcher(url, {
     signal: options.signal,
