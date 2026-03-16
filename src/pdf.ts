@@ -1,3 +1,12 @@
+/**
+ * pdf.ts — PDF text extraction via pdf-parse.
+ *
+ * Reads a PDF file, extracts the full text of the first N pages, and
+ * returns a PdfDocumentSnapshot with the raw text split into lines.
+ * Includes a Node.js module-loader patch so pdf-parse works inside
+ * bundled (esbuild/pkg) binaries.
+ */
+
 import { readFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -7,6 +16,7 @@ import pdfParse from "pdf-parse/lib/pdf-parse.js";
 
 import type { PdfDocumentSnapshot } from "./types.js";
 
+/** Options controlling how many pages to extract from a PDF. */
 export interface PdfExtractionOptions {
   pages?: number;
 }
