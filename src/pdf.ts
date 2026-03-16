@@ -21,6 +21,11 @@ export interface PdfExtractionOptions {
   pages?: number;
 }
 
+/**
+ * Reads a PDF file and returns a snapshot containing the text of the
+ * first `options.pages` pages (default 2) plus document metadata from
+ * the PDF info dictionary (title, author, subject, keywords).
+ */
 export async function extractPdfDocumentSnapshot(
   filePath: string,
   options: PdfExtractionOptions = {}
