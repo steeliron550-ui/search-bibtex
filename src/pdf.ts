@@ -54,6 +54,11 @@ function optionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+/**
+ * Patches Node's `.js` module loader so that pdf-parse's internal bundle
+ * (pdf.js) works inside esbuild/pkg-compiled binaries.  Returns a restore
+ * function that should be called in a `finally` block to undo the patch.
+ */
 function installPdfParseLoaderPatch(): () => void {
   const require = createRequire(path.resolve(process.cwd(), ".search-bibtex-require.cjs"));
   const moduleLoader = require("module") as {
