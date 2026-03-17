@@ -1,3 +1,11 @@
+/**
+ * metadata.ts — PDF metadata extraction and search-query generation.
+ *
+ * Reads a PdfDocumentSnapshot, heuristically detects the paper title,
+ * author list, DOI, arXiv ID, and year, then generates a prioritised
+ * list of SearchQueryCandidates for the bibliographic search phase.
+ */
+
 import path from "node:path";
 
 import type {
@@ -6,7 +14,9 @@ import type {
   SearchQueryCandidate
 } from "./types.js";
 
+/** Matches DOIs like 10.1145/3597500 or 10.1007/978-3-031-... */
 const DOI_PATTERN = /\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i;
+/** Matches arXiv IDs like 2301.12345 or 2301.12345v2 (with optional version suffix). */
 const ARXIV_PATTERN = /\b(?:arxiv\s*:\s*)?([0-9]{4}\.[0-9]{4,5})(v[0-9]+)?\b/i;
 const YEAR_PATTERN = /\b(19[7-9][0-9]|20[0-9]{2})\b/g;
 
