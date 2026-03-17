@@ -40,6 +40,7 @@ const AFFILIATION_PATTERNS = [
   /\b(university|institute|school|department|laboratory|lab|college|academy|huawei|deepseek|microsoft|google|meta|amazon|china|usa|canada|uk|germany|france|japan)\b/i
 ];
 
+/** Collapses all whitespace runs to single spaces and trims. */
 export function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
