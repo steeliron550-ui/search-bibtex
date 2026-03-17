@@ -67,6 +67,7 @@ export function extractArxivId(value: string): string | undefined {
   return `${match[1]}${match[2] ?? ""}`;
 }
 
+/** Generates a prioritised list of search queries (DOI → arXiv → title → title-author) from metadata. */
 export function generateSearchQueries(candidate: PdfMetadataCandidate): SearchQueryCandidate[] {
   const queries: SearchQueryCandidate[] = [];
 
