@@ -58,6 +58,7 @@ export function extractDoi(value: string): string | undefined {
   return match?.[0].replace(/[).,;:]+$/, "");
 }
 
+/** Extracts an arXiv ID (with optional version suffix) from text. */
 export function extractArxivId(value: string): string | undefined {
   const match = value.match(ARXIV_PATTERN);
   if (!match) {
