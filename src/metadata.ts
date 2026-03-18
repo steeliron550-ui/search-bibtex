@@ -103,6 +103,7 @@ export function generateSearchQueries(candidate: PdfMetadataCandidate): SearchQu
   return queries;
 }
 
+/** Builds a PdfMetadataCandidate from a PDF snapshot by detecting title, authors, DOI, arXiv ID, and year. */
 export function buildMetadataCandidate(snapshot: PdfDocumentSnapshot): PdfMetadataCandidate {
   const filename = path.basename(snapshot.filePath);
   const filenameText = filename.replace(/\.pdf$/i, "");
