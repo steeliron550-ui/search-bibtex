@@ -1,3 +1,11 @@
+/**
+ * ranking.ts — Bibliographic candidate scoring and ranking.
+ *
+ * Computes per-field similarity scores (title, author, year, identifier,
+ * source priority) for each search candidate and produces a ranked list
+ * ordered by weighted total score.
+ */
+
 import { normalizeDoi } from "./bibtex.js";
 import { stripArxivVersion } from "./metadata.js";
 import type {
