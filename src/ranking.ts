@@ -16,6 +16,7 @@ import type {
   SearchQueryKind
 } from "./types.js";
 
+/** A raw bibliographic candidate returned by a search source, before scoring. */
 export interface BibliographicCandidate {
   source: PaperSource;
   sourceId?: string;
