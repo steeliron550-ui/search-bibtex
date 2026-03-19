@@ -29,6 +29,7 @@ export interface BibliographicCandidate {
   url?: string;
 }
 
+/** A BibliographicCandidate with scoring metadata attached after ranking. */
 export interface RankedBibliographicCandidate extends BibliographicCandidate {
   matchedQuery: SearchQueryKind;
   score: number;
