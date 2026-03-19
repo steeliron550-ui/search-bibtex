@@ -36,6 +36,7 @@ export interface RankedBibliographicCandidate extends BibliographicCandidate {
   scoreBreakdown: ScoreBreakdown;
 }
 
+/** Ranks and scores bibliographic candidates by weighted field similarity, sorted highest-first. */
 export function rankBibliographicCandidates(
   metadata: PdfMetadataCandidate,
   candidates: BibliographicCandidate[],
