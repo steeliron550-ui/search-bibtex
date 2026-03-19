@@ -127,6 +127,7 @@ export function buildMetadataCandidate(snapshot: PdfDocumentSnapshot): PdfMetada
   };
 }
 
+/** Builds a PdfMetadataCandidate directly from a title string (for stdin/title search). */
 export function buildTitleMetadataCandidate(title: string, filePath = "stdin:title"): PdfMetadataCandidate {
   const normalizedTitle = normalizeWhitespace(title);
   return {
