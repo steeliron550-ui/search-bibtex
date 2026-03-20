@@ -71,6 +71,7 @@ export function scoreCandidate(
   };
 }
 
+/** Computes title similarity via Jaccard token overlap (0.7 weight) and normalised edit distance (0.3 weight). */
 export function textSimilarity(left: string, right: string): number {
   const leftTokens = tokenize(left);
   const rightTokens = tokenize(right);
