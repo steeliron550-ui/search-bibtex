@@ -56,6 +56,7 @@ export function rankBibliographicCandidates(
     .sort((left, right) => right.score - left.score);
 }
 
+/** Scores a single candidate against the extracted metadata across all weighted dimensions. */
 export function scoreCandidate(
   metadata: PdfMetadataCandidate,
   candidate: BibliographicCandidate,
