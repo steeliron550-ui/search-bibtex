@@ -88,6 +88,7 @@ export function textSimilarity(left: string, right: string): number {
   return clamp((jaccard * 0.7) + (edit * 0.3));
 }
 
+/** Computes author-list similarity via exact name matching and surname-only overlap. */
 export function authorSimilarity(left: string[], right: string[]): number {
   if (left.length === 0 || right.length === 0) {
     return 0;
