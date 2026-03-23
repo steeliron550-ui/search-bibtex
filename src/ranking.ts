@@ -101,6 +101,7 @@ export function authorSimilarity(left: string[], right: string[]): number {
   return clamp(Math.max(direct / Math.max(leftNames.size, 1), surnameDirect));
 }
 
+/** Scores year match: exact=1, off-by-1=0.5, otherwise=0. */
 export function yearSimilarity(left: number | undefined, right: number | undefined): number {
   if (!left || !right) {
     return 0;
