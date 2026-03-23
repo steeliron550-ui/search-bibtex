@@ -1,3 +1,16 @@
+/**
+ * Configuration module for search-bibtex.
+ *
+ * Handles loading, parsing, and resolving of TOML configuration files
+ * that control paper source searching behavior, including:
+ * - Source priority ordering
+ * - Search weights for relevance scoring
+ * - Search parallelization and timeout settings
+ * - Custom HTTP-JSON paper source definitions
+ *
+ * @module config
+ */
+
 import { constants as fsConstants } from "node:fs";
 import { access, readFile } from "node:fs/promises";
 import os from "node:os";
