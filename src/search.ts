@@ -1,3 +1,17 @@
+/**
+ * Searches for bibliographic records (BibTeX) across multiple academic sources
+ * given PDF metadata or a file path to a PDF.
+ *
+ * The module orchestrates the search pipeline:
+ * 1. Extracts metadata from a PDF (title, authors, DOI, arXiv ID, year).
+ * 2. Queries built-in sources (arXiv, Crossref, Semantic Scholar, OpenAlex,
+ *    DBLP, DOI resolver) and any custom sources in parallel or sequentially.
+ * 3. Ranks candidate bibliographic records against the input metadata.
+ * 4. Fetches BibTeX for the top-ranked candidates.
+ *
+ * @module search
+ */
+
 import { XMLParser } from "fast-xml-parser";
 
 import { fetchBibtexForRecord } from "./bibtex.js";
