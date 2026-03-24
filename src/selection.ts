@@ -1,3 +1,13 @@
+/**
+ * Interactive terminal selection UI for search-bibtex.
+ *
+ * Provides a vim-inspired browse and filter interface for navigating
+ * search results, previewing BibTeX entries in compact or expanded mode,
+ * and copying formatted citations to the system clipboard.
+ *
+ * @module selection
+ */
+
 import { spawnSync } from "node:child_process";
 import readline from "node:readline";
 
