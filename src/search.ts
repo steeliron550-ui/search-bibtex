@@ -34,6 +34,11 @@ import type {
   SortWeights
 } from "./types.js";
 
+/**
+ * Options that control the behaviour of a bibliography search.
+ *
+ * All properties are optional — sensible defaults are provided for each.
+ */
 export interface BibliographySearchOptions {
   fetcher?: FetchLike;
   preferences?: SearchPreferenceInput;
