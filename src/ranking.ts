@@ -112,6 +112,7 @@ export function yearSimilarity(left: number | undefined, right: number | undefin
   return Math.abs(left - right) === 1 ? 0.5 : 0;
 }
 
+/** Checks DOI or arXiv ID equality between extracted metadata and a candidate, returning 1 or 0. */
 export function identifierSimilarity(metadata: PdfMetadataCandidate, candidate: BibliographicCandidate): number {
   if (metadata.doi && candidate.doi && normalizeDoi(metadata.doi) === normalizeDoi(candidate.doi)) {
     return 1;
