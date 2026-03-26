@@ -20,6 +20,7 @@ import { parse as parseToml, type TomlTable } from "smol-toml";
 
 import { builtinPaperSources, type PaperSource, type SearchPreferences, type SortWeights } from "./types.js";
 
+/** Default search preferences used when no configuration file is provided. */
 export const defaultSearchPreferences: SearchPreferences = {
   sourcePriority: [...builtinPaperSources],
   weights: {
