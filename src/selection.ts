@@ -14,6 +14,7 @@ import readline from "node:readline";
 import { formatBibtexText } from "./bibtex.js";
 import type { SearchResult, SearchSourceError } from "./types.js";
 
+/** The current interaction mode of the selection UI. */
 export type SelectionMode = "browse" | "filter";
 export type PreviewMode = "compact" | "expanded";
 
