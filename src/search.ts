@@ -50,6 +50,12 @@ export interface BibliographySearchOptions {
   timeoutMs?: number;
 }
 
+/**
+ * Progress event emitted during a search operation.
+ *
+ * Fired after each source completes (whether it succeeds or fails) so
+ * consumers can report progress to the user.
+ */
 export interface SearchProgressEvent {
   completed: number;
   total: number;
