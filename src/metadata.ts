@@ -18,8 +18,10 @@ import type {
 const DOI_PATTERN = /\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i;
 /** Matches arXiv IDs like 2301.12345 or 2301.12345v2 (with optional version suffix). */
 const ARXIV_PATTERN = /\b(?:arxiv\s*:\s*)?([0-9]{4}\.[0-9]{4,5})(v[0-9]+)?\b/i;
+/** Matches 4-digit years between 1970 and 2099. */
 const YEAR_PATTERN = /\b(19[7-9][0-9]|20[0-9]{2})\b/g;
 
+/** Patterns that indicate a line is front matter (not title text). */
 const FRONT_MATTER_PATTERNS = [
   /^proceedings of /i,
   /^volume \d+/i,
