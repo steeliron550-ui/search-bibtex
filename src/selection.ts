@@ -16,6 +16,7 @@ import type { SearchResult, SearchSourceError } from "./types.js";
 
 /** The current interaction mode of the selection UI. */
 export type SelectionMode = "browse" | "filter";
+/** The BibTeX preview display density: compact shows key fields only, expanded shows all lines. */
 export type PreviewMode = "compact" | "expanded";
 
 export interface SelectionState {
