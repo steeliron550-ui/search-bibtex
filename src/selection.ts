@@ -19,6 +19,12 @@ export type SelectionMode = "browse" | "filter";
 /** The BibTeX preview display density: compact shows key fields only, expanded shows all lines. */
 export type PreviewMode = "compact" | "expanded";
 
+/**
+ * Immutable snapshot of the interactive selection UI state.
+ *
+ * Tracks cursor position, filter text, interaction mode, preview density,
+ * and whether a result has been selected or the interaction cancelled.
+ */
 export interface SelectionState {
   cursor: number;
   filter: string;
