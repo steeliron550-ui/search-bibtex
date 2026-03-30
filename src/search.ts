@@ -63,6 +63,12 @@ export interface SearchProgressEvent {
   failedSources: PaperSource[];
 }
 
+/**
+ * User-facing preferences that tweak search behaviour.
+ *
+ * Every field is optional so callers can override only what they care about;
+ * missing values are filled in by {@link mergeSearchPreferences}.
+ */
 export interface SearchPreferenceInput {
   sourcePriority?: PaperSource[];
   weights?: Partial<SortWeights>;
