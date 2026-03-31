@@ -1,3 +1,14 @@
+/**
+ * BibTeX file parsing and refinement.
+ *
+ * Parses .bib files into structured document segments, extracts metadata from each entry,
+ * searches bibliographic sources for improved BibTeX records, and rewrites entries while
+ * preserving citation keys. Supports both fully-automatic refinement and interactive
+ * selection of search results.
+ *
+ * @module bibtex-file
+ */
+
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
