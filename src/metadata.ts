@@ -36,6 +36,7 @@ const FRONT_MATTER_PATTERNS = [
   /^industry track paper$/i
 ];
 
+/** Patterns that indicate a line contains affiliation info (not part of the title). */
 const AFFILIATION_PATTERNS = [
   /@/,
   /^https?:\/\//i,
