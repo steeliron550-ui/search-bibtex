@@ -35,6 +35,7 @@ export const defaultSearchPreferences: SearchPreferences = {
 
 /** Default value for parallel search execution. When `true`, paper sources are queried concurrently. */
 export const defaultSearchParallel = true;
+/** Default per-source request timeout in seconds. */
 export const defaultSearchTimeoutSeconds = 30;
 export const defaultSearchTimeoutMs = defaultSearchTimeoutSeconds * 1000;
 
