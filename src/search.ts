@@ -81,6 +81,17 @@ const xmlParser = new XMLParser({
   removeNSPrefix: true
 });
 
+/**
+ * Convenience entry-point that extracts metadata from a PDF file and
+ * immediately runs a full bibliography search.
+ *
+ * This is a thin wrapper: it calls {@link extractPdfDocumentSnapshot} to
+ * obtain text and metadata, then delegates to {@link searchBibtex}.
+ *
+ * @param filePath - Absolute or relative path to a PDF file on disk.
+ * @param options  - Search configuration (fetcher, preferences, sources, etc.).
+ * @returns A promise that resolves with the ranked search response.
+ */
 export async function searchBibtexFromPdf(filePath: string, options: BibliographySearchOptions = {}): Promise<SearchResponse> {
   const snapshot = await extractPdfDocumentSnapshot(filePath, { pages: options.pages });
   const metadata = buildMetadataCandidate(snapshot);
