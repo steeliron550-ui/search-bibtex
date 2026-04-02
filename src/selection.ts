@@ -34,6 +34,7 @@ export interface SelectionState {
   cancelled: boolean;
 }
 
+/** A discriminated union of all user actions the selection UI can respond to. */
 export type SelectionEvent =
   | { type: "up" }
   | { type: "down" }
