@@ -24,6 +24,9 @@ import type {
   SearchSourceError
 } from "./types.js";
 
+/**
+ * A segment of a parsed BibTeX document, either a free-form text block or a recognized entry.
+ */
 export interface BibtexDocumentSegment {
   kind: "text" | "entry";
   text: string;
