@@ -48,6 +48,7 @@ export type SelectionEvent =
   | { type: "toggle-preview" }
   | { type: "char"; value: string };
 
+/** Options for {@link runInteractiveSelection}: I/O streams and source error reporting. */
 export interface InteractiveSelectionOptions {
   sourceErrors?: SearchSourceError[];
   input?: NodeJS.ReadStream;
