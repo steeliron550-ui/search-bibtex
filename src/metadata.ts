@@ -147,6 +147,11 @@ interface TitleMatch {
   endLineIndex: number;
 }
 
+/**
+ * Heuristically detects the paper title from the first few pages of a PDF.
+ * Walks through lines, finds the first plausible title-start line, then
+ * accumulates continuation lines until hitting an author/affiliation/abstract break.
+ */
 function detectTitle(snapshot: PdfDocumentSnapshot): TitleMatch {
   const lines = snapshot.lines.map(normalizeLine).filter(Boolean);
   const abstractIndex = lines.findIndex((line) => /^abstract$/i.test(line));
