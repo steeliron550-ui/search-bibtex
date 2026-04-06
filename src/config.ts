@@ -37,6 +37,7 @@ export const defaultSearchPreferences: SearchPreferences = {
 export const defaultSearchParallel = true;
 /** Default per-source request timeout in seconds. */
 export const defaultSearchTimeoutSeconds = 30;
+/** Default per-source request timeout in milliseconds (derived from {@link defaultSearchTimeoutSeconds}). */
 export const defaultSearchTimeoutMs = defaultSearchTimeoutSeconds * 1000;
 
 export interface SearchConfigInput {
