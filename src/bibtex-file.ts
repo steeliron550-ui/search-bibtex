@@ -33,6 +33,12 @@ export interface BibtexDocumentSegment {
   entry?: ParsedBibtexEntry;
 }
 
+/**
+ * A parsed BibTeX entry with extracted metadata fields.
+ *
+ * Contains the raw entry text, the parsed field key-value pairs, and convenience
+ * derived properties such as title, authors, year, DOI, and arXiv identifier.
+ */
 export interface ParsedBibtexEntry {
   entryType: string;
   citationKey?: string;
