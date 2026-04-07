@@ -52,6 +52,9 @@ export interface ParsedBibtexEntry {
   parsed: boolean;
 }
 
+/**
+ * Progress information for a single entry during a batch BibTeX refinement.
+ */
 export interface BibtexRefinementProgressEntry {
   index: number;
   citationKey: string;
