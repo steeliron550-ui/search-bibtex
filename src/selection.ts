@@ -55,6 +55,7 @@ export interface InteractiveSelectionOptions {
   output?: NodeJS.WriteStream;
 }
 
+/** Options controlling the visual output of {@link renderSelection}. */
 export interface RenderSelectionOptions {
   color?: boolean;
 }
