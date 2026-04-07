@@ -98,6 +98,22 @@ export async function searchBibtexFromPdf(filePath: string, options: Bibliograph
   return searchBibtex(metadata, options);
 }
 
+/**
+ * Runs the complete bibliography search pipeline against the given metadata.
+ *
+ * The pipeline consists of three phases:
+ * 1. **Query generation** — produces tailored search queries from the metadata.
+ * 2. **Source search** — queries each academic source in the configured priority
+ *    order, collecting bibliographic candidates. Sources are searched in parallel
+ *    by default; set `options.parallel` to `false` for sequential execution.
+ * 3. **Ranking and BibTeX fetch** — ranks candidates against the original
+ *    metadata, then fetches BibTeX records for the top matches.
+ *
+ * @param metadata - Metadata extracted from a PDF (title, authors, DOI, etc.).
+ * @param options  - Search configuration.
+ * @returns A promise that resolves with the ranked search response including
+ *          BibTeX entries and any source-level errors encountered.
+ */
 export async function searchBibtex(
   metadata: PdfMetadataCandidate,
   options: BibliographySearchOptions = {}
