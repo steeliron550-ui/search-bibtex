@@ -207,6 +207,17 @@ export async function searchBibtex(
   }
 }
 
+/**
+ * Merges a partial user-provided preference input with the global defaults
+ * to produce a fully-resolved {@link SearchPreferences} object.
+ *
+ * Missing fields are filled from {@link defaultSearchPreferences}. The
+ * `weights` object is shallow-merged so callers can override individual
+ * sort weights without having to specify every key.
+ *
+ * @param preferences - Optional, partial user overrides.
+ * @returns A complete search preferences object ready for consumption.
+ */
 export function mergeSearchPreferences(
   preferences: SearchPreferenceInput = {}
 ): SearchPreferences {
