@@ -186,6 +186,7 @@ function detectTitle(snapshot: PdfDocumentSnapshot): TitleMatch {
   return { endLineIndex: -1 };
 }
 
+/** Cleans a candidate title string, rejecting values that are too short or look like filenames. */
 function cleanTitle(value: string | undefined): string | undefined {
   if (!value) {
     return undefined;
