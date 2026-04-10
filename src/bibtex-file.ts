@@ -62,6 +62,9 @@ export interface BibtexRefinementProgressEntry {
   status: "searching" | "awaiting-confirmation" | "updating" | "updated" | "unchanged";
 }
 
+/**
+ * A progress event emitted during batch BibTeX refinement.
+ */
 export interface BibtexRefinementProgressEvent {
   completed: number;
   total: number;
