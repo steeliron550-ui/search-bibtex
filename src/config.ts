@@ -40,6 +40,10 @@ export const defaultSearchTimeoutSeconds = 30;
 /** Default per-source request timeout in milliseconds (derived from {@link defaultSearchTimeoutSeconds}). */
 export const defaultSearchTimeoutMs = defaultSearchTimeoutSeconds * 1000;
 
+/**
+ * User-facing search configuration section within the TOML config file.
+ * All fields are optional; missing values fall back to defaults.
+ */
 export interface SearchConfigInput {
   sourcePriority?: PaperSource[];
   weights?: Partial<SortWeights>;
