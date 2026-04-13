@@ -71,6 +71,7 @@ interface ClipboardResult {
   message: string;
 }
 
+// Weakly-keyed caches to avoid recomputing normalized search-text and per-filter visible indexes.
 const searchIndexCache = new WeakMap<SearchResult, string>();
 const visibleIndexCache = new WeakMap<readonly SearchResult[], Map<string, number[]>>();
 
