@@ -72,6 +72,9 @@ export interface BibtexRefinementProgressEvent {
   searchProgress?: SearchProgressEvent;
 }
 
+/**
+ * Context passed to a selection runner so it can choose among search results for a given entry.
+ */
 export interface BibtexRefinementSelectionContext {
   index: number;
   total: number;
