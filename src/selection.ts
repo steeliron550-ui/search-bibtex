@@ -75,6 +75,7 @@ interface ClipboardResult {
 const searchIndexCache = new WeakMap<SearchResult, string>();
 const visibleIndexCache = new WeakMap<readonly SearchResult[], Map<string, number[]>>();
 
+/** Creates a fresh {@link SelectionState} with default values (cursor at top, browse mode, compact preview). */
 export function createSelectionState(): SelectionState {
   return {
     cursor: 0,
