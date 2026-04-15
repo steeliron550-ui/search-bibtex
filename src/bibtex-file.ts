@@ -84,6 +84,9 @@ export interface BibtexRefinementSelectionContext {
   response: SearchResponse;
 }
 
+/**
+ * A function that selects a search result (or `undefined` to abort) for a BibTeX entry being refined.
+ */
 export type BibtexRefinementSelectionRunner = (
   context: BibtexRefinementSelectionContext
 ) => Promise<SearchResult | undefined>;
