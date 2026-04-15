@@ -52,6 +52,7 @@ export interface SearchConfigInput {
   timeoutSeconds?: number;
 }
 
+/** Top-level shape of the TOML configuration file. */
 export interface AppConfig {
   search?: SearchConfigInput;
   sources?: CustomSourceConfig[];

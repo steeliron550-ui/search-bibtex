@@ -253,6 +253,11 @@ function looksLikeAuthorLine(line: string): boolean {
   return false;
 }
 
+/**
+ * Extracts author names from the PDF.  First tries the PDF info dictionary;
+ * falls back to scanning lines after the detected title until hitting the
+ * abstract section or an affiliation line.
+ */
 function parseAuthors(snapshot: PdfDocumentSnapshot, titleEndLineIndex: number): string[] {
   if (snapshot.info.author) {
     const infoAuthors = splitAuthorText(snapshot.info.author);
