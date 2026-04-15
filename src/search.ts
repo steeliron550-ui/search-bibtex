@@ -231,6 +231,16 @@ export function mergeSearchPreferences(
   };
 }
 
+/**
+ * Builds a search-source registry that includes all built-in sources plus
+ * any user-provided custom sources.
+ *
+ * Built-in sources are always registered. Custom sources are added when
+ * `enabled` is `true` on their config. Duplicate names are rejected.
+ *
+ * @param customSources - Optional array of custom-source configurations.
+ * @returns A registry (Map) keyed by source name.
+ */
 export function createSearchSourceRegistry(customSources: CustomSourceConfig[] = []): SearchSourceRegistry {
   const registry: SearchSourceRegistry = new Map();
 
