@@ -413,6 +413,16 @@ async function searchDblp(context: SourceSearchContext): Promise<BibliographicCa
   return normalizeDblpHits(response);
 }
 
+/**
+ * Transforms a raw DBLP search API response into normalized bibliographic
+ * candidates that the ranking pipeline can consume.
+ *
+ * Each hit is mapped to a {@link BibliographicCandidate} with the `dblp`
+ * source tag. Entries that lack a title are discarded.
+ *
+ * @param response - The parsed JSON response from the DBLP search API.
+ * @returns An array of bibliographic candidates, one per valid hit.
+ */
 export function normalizeDblpHits(response: DblpSearchResponse): BibliographicCandidate[] {
   return toArray(response.result?.hits?.hit).map((hit) => {
     const info = hit.info;
