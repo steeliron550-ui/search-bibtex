@@ -86,6 +86,13 @@ export function createSelectionState(): SelectionState {
   };
 }
 
+/**
+ * Pure reducer that produces the next {@link SelectionState} from the current
+ * state, a user event, and the list of search results.
+ *
+ * Handles mode transitions (browse/filter), cursor movement, filter text
+ * updates, preview toggling, cancellation, and result selection.
+ */
 export function updateSelectionState(
   state: SelectionState,
   event: SelectionEvent,
