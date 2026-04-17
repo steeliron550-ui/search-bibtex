@@ -91,6 +91,9 @@ export type BibtexRefinementSelectionRunner = (
   context: BibtexRefinementSelectionContext
 ) => Promise<SearchResult | undefined>;
 
+/**
+ * Options that control BibTeX file or document refinement behavior.
+ */
 export interface BibtexRefinementOptions {
   fetcher?: FetchLike;
   preferences?: SearchPreferenceInput;
