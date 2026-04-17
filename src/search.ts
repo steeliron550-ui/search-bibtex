@@ -456,6 +456,16 @@ async function searchArxiv(context: SourceSearchContext): Promise<BibliographicC
   return normalizeArxivFeed(xml);
 }
 
+/**
+ * Parses an arXiv Atom XML feed response and converts each entry into a
+ * normalized bibliographic candidate.
+ *
+ * The arXiv ID is extracted from the entry's URL. The published date is used
+ * to derive the publication year. Entries without a title are filtered out.
+ *
+ * @param xml - Raw Atom XML string from the arXiv export API.
+ * @returns An array of bibliographic candidates tagged with the `arxiv` source.
+ */
 export function normalizeArxivFeed(xml: string): BibliographicCandidate[] {
   const parsed = xmlParser.parse(xml) as ArxivFeedResponse;
   return toArray(parsed.feed?.entry).map((entry) => {
