@@ -154,6 +154,11 @@ export function updateSelectionState(
   return next;
 }
 
+/**
+ * Returns the indices of search results whose concatenated searchable text
+ * contains the normalized filter string. Uses a cached index keyed by the
+ * results array identity to avoid repeated computation.
+ */
 export function visibleIndexes(results: SearchResult[], filter: string): number[] {
   const normalizedFilter = normalizeFilter(filter);
   let resultCache = visibleIndexCache.get(results);
