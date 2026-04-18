@@ -190,6 +190,13 @@ export function visibleIndexes(results: SearchResult[], filter: string): number[
   return visible;
 }
 
+/**
+ * Renders the interactive selection screen as an ANSI string.
+ *
+ * Displays the result list (up to 12 rows), the currently highlighted entry's
+ * detail panel, a BibTeX preview (compact or expanded), the filter bar, and
+ * source-issue banners when `sourceErrors` are provided.
+ */
 export function renderSelection(
   results: SearchResult[],
   state: SelectionState,
