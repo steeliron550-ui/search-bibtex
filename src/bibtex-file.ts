@@ -105,6 +105,10 @@ export interface BibtexRefinementOptions {
   onProgress?: (event: BibtexRefinementProgressEvent) => void;
 }
 
+/**
+ * A per-entry summary produced after refinement, indicating whether the entry was updated
+ * and which source was selected.
+ */
 export interface BibtexRefinementEntryReport {
   index: number;
   citationKey: string;
