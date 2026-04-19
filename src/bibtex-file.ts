@@ -120,6 +120,12 @@ export interface BibtexRefinementEntryReport {
   matchedQuery?: SearchResult["matchedQuery"];
 }
 
+/**
+ * The result of refining a BibTeX file or document.
+ *
+ * Contains the full refined BibTeX text, per-entry reports, and any errors encountered
+ * from individual bibliographic sources.
+ */
 export interface BibtexRefinementResult {
   text: string;
   entries: BibtexRefinementEntryReport[];
