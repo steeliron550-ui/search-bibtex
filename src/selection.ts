@@ -240,6 +240,16 @@ export function renderSelection(
   ].join("\n");
 }
 
+/**
+ * Runs the full-screen interactive selection loop on a TTY.
+ *
+ * Takes over the terminal with raw-mode keypress handling, renders the
+ * selection UI, and resolves with the chosen {@link SearchResult} (or
+ * `undefined` if the user cancelled). On selection the formatted BibTeX is
+ * automatically copied to the system clipboard.
+ *
+ * Throws if the input/output streams are not a TTY.
+ */
 export async function runInteractiveSelection(
   results: SearchResult[],
   options: InteractiveSelectionOptions = {}
