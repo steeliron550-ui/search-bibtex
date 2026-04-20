@@ -133,6 +133,11 @@ export interface BibtexRefinementResult {
 }
 
 const SPECIAL_ENTRY_TYPES = new Set(["comment", "preamble", "string"]);
+
+/**
+ * Sentinel source value indicating the user chose to keep the current BibTeX entry text as-is
+ * rather than replacing it with a search result.
+ */
 export const KEEP_CURRENT_SELECTION_SOURCE = "__keep-current__";
 
 export async function refineBibtexFile(
