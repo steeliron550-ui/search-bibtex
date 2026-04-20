@@ -393,6 +393,13 @@ function assertRegisteredSources(sourcePriority: PaperSource[], sourceRegistry: 
   }
 }
 
+/**
+ * The set of built-in academic search sources that are always available.
+ *
+ * Each entry maps a source name to the function that queries that source.
+ * The array order determines the default priority used when a caller does
+ * not specify an explicit source priority.
+ */
 const builtinSearchSources: SearchSource[] = [
   { name: "arxiv", search: searchArxiv },
   { name: "crossref", search: searchCrossref },
