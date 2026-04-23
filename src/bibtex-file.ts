@@ -140,6 +140,13 @@ const SPECIAL_ENTRY_TYPES = new Set(["comment", "preamble", "string"]);
  */
 export const KEEP_CURRENT_SELECTION_SOURCE = "__keep-current__";
 
+/**
+ * Read a BibTeX file from disk and refine every entry by searching bibliographic sources.
+ *
+ * @param filePath - Path to a .bib file.
+ * @param options - Refinement options.
+ * @returns The refined BibTeX document text, per-entry reports, and any source errors.
+ */
 export async function refineBibtexFile(
   filePath: string,
   options: BibtexRefinementOptions = {}
