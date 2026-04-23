@@ -315,6 +315,14 @@ export async function runInteractiveSelection(
   });
 }
 
+/**
+ * Translates a raw keypress (input string + key metadata) into a
+ * {@link SelectionEvent} discriminated union, or `undefined` if the key
+ * should be ignored.
+ *
+ * Supports vim-style navigation (j/k, g/G) alongside arrow keys and
+ * Ctrl-based shortcuts.
+ */
 export function keypressToSelectionEvent(input: string, key: KeypressKey): SelectionEvent | undefined {
   if (key.ctrl && input === "c") {
     return { type: "cancel" };
