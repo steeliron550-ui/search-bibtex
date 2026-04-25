@@ -363,6 +363,10 @@ export function keypressToSelectionEvent(input: string, key: KeypressKey): Selec
   return undefined;
 }
 
+/**
+ * Retrieves a single {@link SearchResult} by its numeric index in the results
+ * array. Throws if the index is out of bounds.
+ */
 export function selectedResultByIndex(results: SearchResult[], index: number): SearchResult {
   const selected = results[index];
   if (!selected) {
