@@ -599,6 +599,13 @@ function searchDoi(metadata: PdfMetadataCandidate): BibliographicCandidate[] {
   }];
 }
 
+/**
+ * Error thrown when a search phase exceeds the configured time limit.
+ *
+ * Both source-level searches and individual BibTeX fetches are subject to
+ * the timeout. The timeout includes a small grace period beyond the nominal
+ * limit to allow in-flight requests to settle before the error is raised.
+ */
 class SearchTimeoutError extends Error {
   constructor(timeoutMs: number) {
     super(`Search timed out after ${Math.round(timeoutMs / 1000)}s.`);
