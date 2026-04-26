@@ -155,6 +155,16 @@ export async function refineBibtexFile(
   return refineBibtexDocument(text, { ...options, filePath });
 }
 
+/**
+ * Refine a BibTeX document string by searching bibliographic sources for each entry.
+ *
+ * Iterates over every parseable entry, searches bibliographic sources, selects the best
+ * (or user-chosen) result, and rewrites the entry with the original citation key preserved.
+ *
+ * @param text - The raw BibTeX document text.
+ * @param options - Refinement options.
+ * @returns The refined BibTeX document text, per-entry reports, and any source errors.
+ */
 export async function refineBibtexDocument(
   text: string,
   options: BibtexRefinementOptions = {}
