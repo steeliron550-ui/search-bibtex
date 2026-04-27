@@ -375,6 +375,10 @@ export function selectedResultByIndex(results: SearchResult[], index: number): S
   return selected;
 }
 
+/**
+ * Formats a selected {@link SearchResult} for output — either as a raw JSON
+ * string or as a pretty-printed BibTeX entry.
+ */
 export function formatSelectedResult(result: SearchResult, format: "bibtex" | "json"): string {
   if (format === "json") {
     return `${JSON.stringify(result, null, 2)}\n`;
