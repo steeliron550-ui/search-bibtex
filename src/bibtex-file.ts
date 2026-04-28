@@ -332,6 +332,15 @@ async function selectFirstSearchResult(context: BibtexRefinementSelectionContext
   return context.response.results[0];
 }
 
+/**
+ * Parse a raw BibTeX string into alternating text and entry segments.
+ *
+ * Non-entry text (comments, whitespace, preamble, etc.) is preserved as-is.
+ * Each recognized `@type{...}` block is parsed as an entry segment.
+ *
+ * @param text - The raw BibTeX document text.
+ * @returns An ordered array of {@link BibtexDocumentSegment} objects.
+ */
 export function parseBibtexDocument(text: string): BibtexDocumentSegment[] {
   const segments: BibtexDocumentSegment[] = [];
   let cursor = 0;
