@@ -58,6 +58,7 @@ export interface AppConfig {
   sources?: CustomSourceConfig[];
 }
 
+/** Fully resolved search configuration with all defaults applied and timeout expressed in both seconds and milliseconds. */
 export interface ResolvedSearchConfig extends SearchPreferences {
   parallel: boolean;
   timeoutSeconds: number;
