@@ -13,6 +13,10 @@ import { fetchText } from "./http.js";
 import { normalizeWhitespace, stripArxivVersion } from "./metadata.js";
 import type { SearchResult } from "./types.js";
 
+/**
+ * A structured bibliographic record that can be used to fetch or generate
+ * a BibTeX entry.
+ */
 export interface BibtexRecord {
   source: SearchResult["source"];
   sourceId?: string;
