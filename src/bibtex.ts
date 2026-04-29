@@ -1,3 +1,13 @@
+/**
+ * BibTeX fetching, generation, normalization, and formatting utilities.
+ *
+ * Supports resolving BibTeX records from DOI, DBLP, and local generation
+ * when no external source is available. Also provides format-pretty-printing
+ * of raw BibTeX text with syntax-aware parsing.
+ *
+ * @module bibtex
+ */
+
 import type { FetchLike, FetchRequestOptions } from "./http.js";
 import { fetchText } from "./http.js";
 import { normalizeWhitespace, stripArxivVersion } from "./metadata.js";
