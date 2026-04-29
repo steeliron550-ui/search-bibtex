@@ -372,6 +372,15 @@ export function parseBibtexDocument(text: string): BibtexDocumentSegment[] {
   return segments;
 }
 
+/**
+ * Parse a single raw BibTeX entry string into structured metadata.
+ *
+ * Extracts the entry type, citation key, all field key-value pairs, and convenience
+ * derived fields such as title, authors, year, DOI, and arXiv identifier.
+ *
+ * @param raw - A single raw BibTeX entry string (e.g. `@article{key, title={...}, ...}`).
+ * @returns A parsed entry, or `undefined` if the string does not match BibTeX entry syntax.
+ */
 export function parseBibtexEntry(raw: string): ParsedBibtexEntry | undefined {
   const header = raw.match(/^@([A-Za-z][A-Za-z0-9_-]*)\s*([({])/s);
   if (!header) {
