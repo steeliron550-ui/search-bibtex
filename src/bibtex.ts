@@ -29,6 +29,11 @@ export interface BibtexRecord {
   url?: string;
 }
 
+/**
+ * Resolves a BibTeX string for the given record using the best available
+ * strategy: DBLP fetch (when `source === "dblp"`), DOI content negotiation,
+ * or local generation as a fallback.
+ */
 export async function fetchBibtexForRecord(
   record: BibtexRecord,
   fetcher: FetchLike,
