@@ -1,4 +1,13 @@
 #!/usr/bin/env node
+/**
+ * CLI entry point for search-bibtex.
+ *
+ * Defines the Commander-based command-line interface with subcommands for metadata extraction,
+ * bibliographic search, BibTeX file refinement, and interactive result selection from PDF or
+ * title inputs.
+ *
+ * @module cli
+ */
 import { Command } from "commander";
 import { writeFile } from "node:fs/promises";
 
