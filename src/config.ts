@@ -65,6 +65,7 @@ export interface ResolvedSearchConfig extends SearchPreferences {
   timeoutMs: number;
 }
 
+/** Fully resolved application configuration including the config file path, load status, resolved search settings, and custom sources. */
 export interface ResolvedAppConfig {
   configPath: string;
   configLoaded: boolean;
