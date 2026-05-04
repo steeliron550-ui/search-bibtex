@@ -50,6 +50,10 @@ export async function fetchBibtexForRecord(
   return generateBibtex(record);
 }
 
+/**
+ * Fetches a BibTeX entry from doi.org via HTTP content negotiation
+ * (`Accept: application/x-bibtex`) and returns the normalized result.
+ */
 export async function fetchDoiBibtex(
   doi: string,
   fetcher: FetchLike,
