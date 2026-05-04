@@ -73,6 +73,7 @@ export interface ResolvedAppConfig {
   sources: CustomSourceConfig[];
 }
 
+/** Result of loading a TOML configuration file from disk, including the resolved path, whether the file was found, and the parsed config. */
 export interface LoadedAppConfig {
   configPath: string;
   configLoaded: boolean;
