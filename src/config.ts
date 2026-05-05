@@ -80,6 +80,7 @@ export interface LoadedAppConfig {
   config: AppConfig;
 }
 
+/** Options for loading a configuration file, allowing a custom path or working directory override. */
 export interface LoadConfigOptions {
   configPath?: string;
   cwd?: string;
