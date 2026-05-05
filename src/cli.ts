@@ -43,6 +43,14 @@ import {
   type SortWeights
 } from "./types.js";
 
+/**
+ * Build and return the Commander program with all subcommands registered.
+ *
+ * Subcommands: {@code config-defaults}, {@code config-template}, {@code metadata},
+ * {@code search}, {@code update}, {@code select}, {@code search-title}.
+ *
+ * @returns The configured Commander instance.
+ */
 export function createProgram(): Command {
   const program = new Command();
 
