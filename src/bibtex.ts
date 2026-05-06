@@ -65,6 +65,10 @@ export async function fetchDoiBibtex(
   );
 }
 
+/**
+ * Fetches a BibTeX entry from DBLP's `/rec/{key}.bib` endpoint using the
+ * given DBLP source identifier (URL or plain key).
+ */
 export async function fetchDblpBibtex(
   sourceId: string,
   fetcher: FetchLike,
