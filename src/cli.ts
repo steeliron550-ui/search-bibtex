@@ -369,6 +369,13 @@ function parseNonNegativeInteger(value: string): number {
   return parsed;
 }
 
+/**
+ * Split a string by a delimiter into trimmed, non-empty substrings.
+ *
+ * @param value - The string to split.
+ * @param delimiter - The delimiter character or string. Defaults to {@code ";"}.
+ * @returns An array of trimmed, non-empty segments.
+ */
 export function splitDelimitedValues(value: string, delimiter = ";"): string[] {
   if (delimiter === "") {
     throw new Error("Delimiter cannot be empty.");
