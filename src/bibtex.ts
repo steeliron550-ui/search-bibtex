@@ -80,6 +80,11 @@ export async function fetchDblpBibtex(
   );
 }
 
+/**
+ * Generates a BibTeX entry string from a {@link BibtexRecord} in the
+ * local/default format. Uses `@article` when an arXiv ID is present,
+ * otherwise `@misc`.
+ */
 export function generateBibtex(record: BibtexRecord): string {
   const fields: string[] = [
     `  title = {${escapeBibtexValue(record.title)}}`,
