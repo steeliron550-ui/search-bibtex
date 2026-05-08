@@ -86,6 +86,7 @@ export interface LoadConfigOptions {
   cwd?: string;
 }
 
+/** Options for resolving an already-parsed config into a {@link ResolvedAppConfig}, optionally overriding the config path and load status. */
 export interface ResolveAppConfigOptions {
   configPath?: string;
   configLoaded?: boolean;
