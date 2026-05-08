@@ -111,6 +111,10 @@ export function generateBibtex(record: BibtexRecord): string {
   return `@${record.arxivId ? "article" : "misc"}{${citationKey(record)},\n${fields.join(",\n")}\n}`;
 }
 
+/**
+ * Normalizes a DOI string by stripping URL prefixes (`https://doi.org/`,
+ * `dx.doi.org/`) and the `doi:` scheme, then lowercasing the result.
+ */
 export function normalizeDoi(doi: string): string {
   return doi
     .trim()
