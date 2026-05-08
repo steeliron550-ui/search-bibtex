@@ -439,6 +439,9 @@ interface TitleSearchCommandOptions extends SearchExecutionOptions {
   downloadDir?: string;
 }
 
+/**
+ * A search response paired with the original title string that produced it.
+ */
 export interface TitleSearchResponseEntry {
   title: string;
   response: SearchResponse;
