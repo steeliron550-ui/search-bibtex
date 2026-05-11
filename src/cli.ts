@@ -447,6 +447,13 @@ export interface TitleSearchResponseEntry {
   response: SearchResponse;
 }
 
+/**
+ * A function that searches bibliographic sources for a single title.
+ *
+ * @param title - The title string to search for.
+ * @param index - The 0-based index of this title in the batch.
+ * @returns A promise resolving to the search response.
+ */
 export type TitleSearchRunner = (title: string, index: number) => Promise<SearchResponse>;
 export type TitleSelectionRunner = (
   results: SearchResult[],
