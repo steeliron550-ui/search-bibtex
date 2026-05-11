@@ -123,6 +123,7 @@ export function normalizeDoi(doi: string): string {
     .toLowerCase();
 }
 
+/** Normalizes a raw BibTeX string: trims whitespace and converts CRLF to LF. */
 export function normalizeBibtex(value: string): string {
   return value.trim().replace(/\r\n/g, "\n");
 }
