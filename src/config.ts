@@ -92,6 +92,7 @@ export interface ResolveAppConfigOptions {
   configLoaded?: boolean;
 }
 
+/** Configuration for a user-defined custom paper source that queries an HTTP-JSON API. */
 export interface CustomSourceConfig {
   name: PaperSource;
   kind: "http-json";
