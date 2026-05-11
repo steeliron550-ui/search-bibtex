@@ -102,6 +102,7 @@ export interface CustomSourceConfig {
   bibtex: CustomSourceBibtexConfig;
 }
 
+/** Search endpoint configuration for a custom paper source. */
 export interface CustomSourceSearchConfig {
   url: string;
 }
