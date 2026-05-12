@@ -455,6 +455,9 @@ export interface TitleSearchResponseEntry {
  * @returns A promise resolving to the search response.
  */
 export type TitleSearchRunner = (title: string, index: number) => Promise<SearchResponse>;
+/**
+ * A function that selects a single search result from a ranked list, optionally aware of source errors.
+ */
 export type TitleSelectionRunner = (
   results: SearchResult[],
   options: { sourceErrors?: SearchSourceError[] }
