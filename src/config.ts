@@ -107,6 +107,7 @@ export interface CustomSourceSearchConfig {
   url: string;
 }
 
+/** Response mapping configuration that describes where to find search results in the JSON response and how to extract fields. */
 export interface CustomSourceResponseConfig {
   itemsPath: string;
   fields: CustomSourceFieldMap;
