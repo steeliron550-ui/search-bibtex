@@ -128,6 +128,11 @@ export function normalizeBibtex(value: string): string {
   return value.trim().replace(/\r\n/g, "\n");
 }
 
+/**
+ * Pretty-prints a raw BibTeX string by parsing its structure (entry type,
+ * citation key, fields) and re-emitting with consistent indentation and
+ * trailing commas. Falls back to the normalized raw text if parsing fails.
+ */
 export function formatBibtexText(value: string): string {
   const normalized = normalizeBibtex(value);
   const parsed = parseBibtexLikeText(normalized);
