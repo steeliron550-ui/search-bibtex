@@ -463,6 +463,13 @@ export type TitleSelectionRunner = (
   options: { sourceErrors?: SearchSourceError[] }
 ) => Promise<SearchResult | undefined>;
 
+/**
+ * Run a title search for each input and collect the full response for every title.
+ *
+ * @param titleInputs - An array of title strings to search.
+ * @param search - The search runner to invoke for each title.
+ * @returns A promise resolving to an array of title-response pairs.
+ */
 export async function collectTitleSearchResponses(
   titleInputs: string[],
   search: TitleSearchRunner
