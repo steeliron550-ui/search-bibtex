@@ -483,6 +483,14 @@ export async function collectTitleSearchResponses(
   return responses;
 }
 
+/**
+ * Search for each title and let the user interactively pick one result per title.
+ *
+ * @param titleInputs - An array of title strings to search.
+ * @param search - The search runner to invoke for each title.
+ * @param select - The selection runner (defaults to {@link runInteractiveSelection}).
+ * @returns A promise resolving to an array of selected results, or `undefined` if the user cancelled.
+ */
 export async function collectInteractiveTitleSelections(
   titleInputs: string[],
   search: TitleSearchRunner,
