@@ -113,6 +113,7 @@ export interface CustomSourceResponseConfig {
   fields: CustomSourceFieldMap;
 }
 
+/** Maps JSON response field names to paper metadata fields. Only `title` is required; all other fields are optional. */
 export interface CustomSourceFieldMap {
   sourceId?: string;
   title: string;
