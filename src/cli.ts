@@ -509,6 +509,12 @@ export async function collectInteractiveTitleSelections(
   return selectedResults;
 }
 
+/**
+ * Format an ordered list of selected search results as BibTeX text blocks separated by blank lines.
+ *
+ * @param results - The selected search results.
+ * @returns A formatted BibTeX string, or an empty string if the array is empty.
+ */
 export function formatSelectedTitleSearchResults(results: SearchResult[]): string {
   if (results.length === 0) {
     return "";
