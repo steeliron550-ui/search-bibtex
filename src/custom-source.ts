@@ -1,3 +1,14 @@
+/**
+ * Custom HTTP-JSON search source adapter.
+ *
+ * Builds a {@link SearchSource} from a {@link CustomSourceConfig} by
+ * translating user-provided URL templates and JSON-path field mappings into
+ * the internal {@link BibliographicCandidate} format used by the ranking and
+ * BibTeX resolution pipelines.
+ *
+ * @module custom-source
+ */
+
 import {
   fetchDoiBibtex,
   generateBibtex,
