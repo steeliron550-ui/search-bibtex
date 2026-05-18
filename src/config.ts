@@ -125,6 +125,7 @@ export interface CustomSourceFieldMap {
   url?: string;
 }
 
+/** BibTeX retrieval strategy for a custom paper source. Supports DOI lookup, URL template fetching, or on-the-fly generation. */
 export type CustomSourceBibtexConfig =
   | { strategy: "doi" }
   | { strategy: "url"; urlTemplate: string; accept: string }
