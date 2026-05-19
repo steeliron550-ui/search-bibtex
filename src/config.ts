@@ -131,6 +131,7 @@ export type CustomSourceBibtexConfig =
   | { strategy: "url"; urlTemplate: string; accept: string }
   | { strategy: "generate" };
 
+/** Error thrown when a configuration file is missing, unreadable, or contains invalid values. Includes the config file path when available. */
 export class ConfigError extends Error {
   readonly configPath?: string;
 
