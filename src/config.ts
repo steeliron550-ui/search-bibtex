@@ -142,6 +142,7 @@ export class ConfigError extends Error {
   }
 }
 
+/** Default TOML configuration content written when no config file exists. Documents all available options with their default values. */
 export const defaultConfigToml = `[search]
 limit = 10
 timeout_seconds = 30
