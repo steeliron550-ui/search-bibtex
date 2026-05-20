@@ -600,6 +600,13 @@ function parseOutputFormat(value: string): "bibtex" | "json" {
   return value;
 }
 
+/**
+ * Determine whether an interactive TTY-based selection UI should be used.
+ *
+ * @param stdinIsTTY - Whether stdin is a TTY. Defaults to {@code process.stdin.isTTY}.
+ * @param stdoutIsTTY - Whether stdout is a TTY. Defaults to {@code process.stdout.isTTY}.
+ * @returns {@code true} if both stdin and stdout are TTYs.
+ */
 export function shouldUseInteractiveSearch(
   stdinIsTTY: boolean | undefined = process.stdin.isTTY,
   stdoutIsTTY: boolean | undefined = process.stdout.isTTY
