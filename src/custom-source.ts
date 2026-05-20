@@ -21,6 +21,13 @@ import { normalizeWhitespace } from "./metadata.js";
 import type { BibliographicCandidate } from "./ranking.js";
 import type { SearchSource, SourceSearchContext } from "./source.js";
 
+/**
+ * Creates a {@link SearchSource} from a {@link CustomSourceConfig}.
+ *
+ * The returned source handles both searching (via an HTTP JSON API with
+ * configurable URL templates and JSON-path field extraction) and BibTeX
+ * retrieval (doi, url, or locally-generated strategies).
+ */
 export function createCustomSearchSource(config: CustomSourceConfig): SearchSource {
   return {
     name: config.name,
