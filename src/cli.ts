@@ -614,6 +614,11 @@ export function shouldUseInteractiveSearch(
   return Boolean(stdinIsTTY && stdoutIsTTY);
 }
 
+/**
+ * Parse command-line arguments and run the appropriate subcommand.
+ *
+ * @param argv - The command-line argument vector. Defaults to {@code process.argv}.
+ */
 export async function main(argv = process.argv): Promise<void> {
   await createProgram().parseAsync(argv);
 }
