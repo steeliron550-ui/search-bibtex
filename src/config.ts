@@ -157,6 +157,11 @@ identifier = 0.20
 source = 0.05
 `;
 
+/**
+ * Resolves a config file path to an absolute path.
+ * If an explicit path is provided it is resolved relative to `cwd` with tilde expansion.
+ * Otherwise returns the default OS-specific config path (`~/.config/search-bibtex/config.toml`).
+ */
 export function resolveConfigPath(configPath?: string, cwd = process.cwd()): string {
   if (configPath) {
     return nodePath.resolve(cwd, expandHome(configPath));
