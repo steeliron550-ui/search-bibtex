@@ -654,6 +654,15 @@ function createBibtexUpdateProgressReporter(): BibtexUpdateProgressReporter {
   };
 }
 
+/**
+ * Build a synthetic search result that represents keeping the current BibTeX entry unchanged.
+ *
+ * The result uses the {@link KEEP_CURRENT_SELECTION_SOURCE} sentinel so downstream logic
+ * can distinguish "keep current" from an actual bibliographic source hit.
+ *
+ * @param context - The selection context for the current entry.
+ * @returns A search result whose BibTeX text matches the original entry.
+ */
 export function buildKeepCurrentSelectionResult(
   context: BibtexRefinementSelectionContext
 ): SearchResult {
