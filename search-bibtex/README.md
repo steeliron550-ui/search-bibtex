@@ -68,6 +68,14 @@ codesign --sign - dist-bin/search-bibtex-macos-arm64
 ./dist-bin/search-bibtex-linux-x64 config-defaults
 ```
 
+查看帮助：
+
+```bash
+./dist-bin/search-bibtex-linux-x64 --help
+./dist-bin/search-bibtex-linux-x64 -h
+./dist-bin/search-bibtex-linux-x64 select --help
+```
+
 Windows 对应：
 
 ```powershell

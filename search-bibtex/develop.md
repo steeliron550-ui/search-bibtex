@@ -205,6 +205,7 @@ pnpm --dir search-bibtex test:e2e
 
 ```bash
 ./dist-bin/search-bibtex-linux-x64 --help
+./dist-bin/search-bibtex-linux-x64 -h
 ```
 
 在 Windows 上对应 `search-bibtex-win-x64.exe` 或 `search-bibtex-win-arm64.exe`。
