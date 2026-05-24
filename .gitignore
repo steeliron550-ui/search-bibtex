@@ -1,0 +1,10 @@
+refs/
+pdfs/
+node_modules/
+dist/
+coverage/
+.turbo/
+.vite/
+*.log
+*.tmp
+*.tsbuildinfo
