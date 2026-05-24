@@ -1,3 +1,12 @@
+/**
+ * Barrel module that re-exports the public API of search-bibtex.
+ *
+ * Aggregates configuration, BibTeX parsing/refinement, download, metadata extraction,
+ * PDF snapshot, ranking/scoring, search, and interactive selection utilities so consumers
+ * can import everything from a single entry point.
+ *
+ * @module index
+ */
 export {
   ConfigError,
   defaultConfigToml,
