@@ -30,6 +30,8 @@ Use this skill for the `search-bibtex` binary. The binary is independent of Pape
    Parallel source search is on by default; use `--no-parallel` only if the user wants serial lookup.
    If the user has a config file, pass `--config <path>` and let CLI flags override it.
 
+   For title strings instead of PDFs, use `search-bibtex search-title`. Multiple titles in one input are split by `;` by default, and stdin is accepted when no title argument is provided.
+
 4. Let the user choose a BibTeX entry:
 
    ```bash

@@ -113,6 +113,17 @@ export function buildMetadataCandidate(snapshot: PdfDocumentSnapshot): PdfMetada
   };
 }
 
+export function buildTitleMetadataCandidate(title: string, filePath = "stdin:title"): PdfMetadataCandidate {
+  const normalizedTitle = normalizeWhitespace(title);
+  return {
+    filePath,
+    pageCount: 0,
+    title: normalizedTitle || undefined,
+    authors: [],
+    textSample: normalizedTitle
+  };
+}
+
 interface TitleMatch {
   title?: string;
   endLineIndex: number;
