@@ -5,12 +5,14 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
+  buildKeepCurrentSelectionResult,
   collectInteractiveTitleSelections,
   collectTitleSearchResponses,
   formatSelectedTitleSearchResults,
   shouldUseInteractiveSearch,
   splitDelimitedValues
 } from "../src/cli.js";
+import { KEEP_CURRENT_SELECTION_SOURCE, parseBibtexEntry } from "../src/bibtex-file.js";
 import type { SearchResponse, SearchResult } from "../src/types.js";
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -137,6 +139,38 @@ describe("title search workflow", () => {
       makeResult("PagedAttention", "@article{paged}"),
       makeResult("DistServe", "@inproceedings{dist}")
     ])).toBe("@article{paged}\n\n@inproceedings{dist}\n");
+  });
+});
+
+describe("update keep-current option", () => {
+  it("builds a keep-current selection result with a standardized preview", () => {
+    const raw = [
+      "@article{achiam2023gpt,",
+      "  author = {Achiam, Josh and Adler, Steven},",
+      "  title = {Gpt-4 technical report},",
+      "  journal = {arXiv preprint arXiv:2303.08774},",
+      "  year = {2023},",
+      "  doi = {10.48550/arxiv.2303.08774}",
+      "}"
+    ].join("\n");
+    const currentEntry = parseBibtexEntry(raw);
+    if (!currentEntry) {
+      throw new Error("Failed to parse sample BibTeX entry.");
+    }
+
+    const result = buildKeepCurrentSelectionResult({
+      index: 0,
+      total: 1,
+      citationKey: "achiam2023gpt",
+      title: "Gpt-4 technical report",
+      currentEntry,
+      response: makeResponse("Gpt-4 technical report", [])
+    });
+
+    expect(result.source).toBe(KEEP_CURRENT_SELECTION_SOURCE);
+    expect(result.title).toBe("Keep current format");
+    expect(result.bibtex).toContain("title = {Gpt-4 technical report},");
+    expect(result.bibtex).toContain("doi = {10.48550/arxiv.2303.08774},\n}");
   });
 });
 

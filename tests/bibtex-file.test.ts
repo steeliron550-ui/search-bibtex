@@ -2,7 +2,9 @@ import { readFile } from "node:fs/promises";
 
 import { describe, expect, it } from "vitest";
 
-import { parseBibtexDocument, refineBibtexDocument } from "../src/bibtex-file.js";
+import { formatBibtexText } from "../src/bibtex.js";
+import { KEEP_CURRENT_SELECTION_SOURCE, parseBibtexDocument, refineBibtexDocument } from "../src/bibtex-file.js";
+import type { SearchResult } from "../src/types.js";
 
 describe("BibTeX parsing", () => {
   it("extracts titles and citation keys from the sample BibTeX format", async () => {
@@ -155,6 +157,45 @@ describe("BibTeX refinement", () => {
     })).rejects.toThrow("BibTeX update cancelled for first2024.");
 
     expect(confirmed).toEqual(["first2024"]);
+  });
+
+  it("keeps the original entry text when the current-format option is selected", async () => {
+    const raw = [
+      "@article{achiam2023gpt,",
+      "  author = {Achiam, Josh and Adler, Steven},",
+      "  title = {Gpt-4 technical report},",
+      "  journal = {arXiv preprint arXiv:2303.08774},",
+      "  year = {2023}",
+      "}"
+    ].join("\n");
+    const keepCurrentResult: SearchResult = {
+      source: KEEP_CURRENT_SELECTION_SOURCE,
+      title: "Keep current format",
+      authors: ["Josh Achiam", "Steven Adler"],
+      year: 2023,
+      doi: "10.48550/arxiv.2303.08774",
+      matchedQuery: "title",
+      score: 0,
+      scoreBreakdown: {
+        title: 0,
+        author: 0,
+        year: 0,
+        identifier: 0,
+        source: 0
+      },
+      bibtex: formatBibtexText(raw)
+    };
+
+    const result = await refineBibtexDocument(raw, {
+      preferences: {
+        sourcePriority: ["dblp"],
+        limit: 1
+      },
+      fetcher: fakeFetch,
+      selectResult: async () => keepCurrentResult
+    });
+
+    expect(result.text).toBe(raw);
   });
 });
 
