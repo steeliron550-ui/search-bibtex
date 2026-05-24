@@ -169,6 +169,11 @@ export function resolveConfigPath(configPath?: string, cwd = process.cwd()): str
   return nodePath.join(os.homedir(), ".config", "search-bibtex", "config.toml");
 }
 
+/**
+ * Loads and parses a TOML configuration file from disk.
+ * Returns an empty config if no file is found at the default path.
+ * Throws {@link ConfigError} if an explicitly specified path does not exist or is unreadable.
+ */
 export async function loadConfig(options: LoadConfigOptions = {}): Promise<LoadedAppConfig> {
   const configPath = resolveConfigPath(options.configPath, options.cwd);
   const explicitPath = options.configPath !== undefined;
