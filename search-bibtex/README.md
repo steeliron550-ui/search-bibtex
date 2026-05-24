@@ -88,16 +88,19 @@ search-bibtex metadata paper.pdf
 ```bash
 search-bibtex search paper.pdf \
   --source-priority dblp,arxiv,crossref,openalex,doi \
-  --limit 5
+  --limit 5 \
+  --timeout 30
 ```
 
-终端里会先显示源搜索进度提示，然后再进入选择器。
+终端里会先显示源搜索进度提示，然后再进入选择器。确认后会在屏幕上显示格式化 BibTeX，并尝试复制到剪贴板。
 
 交互选择 BibTeX：
 
 ```bash
 search-bibtex select paper.pdf
 ```
+
+交互确认会留在屏幕上，显示格式化后的 BibTeX，并尝试复制到剪贴板；不会再重复把同一份 BibTeX 打到 stdout。需要机器读取时用 `--select-index`。
 
 非交互选择第 0 个候选，适合脚本：
 
@@ -126,6 +129,8 @@ search-bibtex update pdfs/test.bib --in-place
 ```bash
 search-bibtex update pdfs/test.bib --output updated.bib
 ```
+
+搜索阶段默认超时 30 秒，可用 `--timeout` 调整。
 
 ## 排序配置
 

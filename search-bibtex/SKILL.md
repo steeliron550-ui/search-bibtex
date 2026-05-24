@@ -24,13 +24,13 @@ Use this skill for the `search-bibtex` binary. The binary is independent of Pape
 3. Search and rank candidates. In a TTY, it opens the selector; when piped, it prints JSON:
 
    ```bash
-   search-bibtex search <pdf-path> --limit 10 --source-priority dblp,arxiv,crossref,openalex,doi
+   search-bibtex search <pdf-path> --limit 10 --timeout 30 --source-priority dblp,arxiv,crossref,openalex,doi
    ```
 
 4. Let the user choose a BibTeX entry:
 
    ```bash
-   search-bibtex select <pdf-path> --limit 10 --source-priority dblp,arxiv,crossref,openalex,doi
+   search-bibtex select <pdf-path> --limit 10 --timeout 30 --source-priority dblp,arxiv,crossref,openalex,doi
    ```
 
 5. If the user already has a `.bib` file and wants refreshed fields without changing citation keys:
@@ -75,7 +75,7 @@ The interactive selector supports:
 - `Enter` to select.
 - `q`, `Esc`, or `Ctrl-C` to cancel.
 
-Render UI goes to stderr and the selected BibTeX or JSON goes to stdout.
+Render UI goes to stderr and the selected BibTeX or JSON goes to stdout. When the user presses `Enter`, the screen shows the formatted BibTeX and the tool attempts to copy it to the clipboard if a local clipboard command is available.
 
 ## Failure Handling
 

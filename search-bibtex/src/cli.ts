@@ -3,7 +3,7 @@ import { Command } from "commander";
 import { writeFile } from "node:fs/promises";
 
 import { refineBibtexFile } from "./bibtex-file.js";
-import { defaultSearchPreferences } from "./config.js";
+import { defaultSearchPreferences, defaultSearchTimeoutMs } from "./config.js";
 import { buildMetadataCandidate, generateSearchQueries } from "./metadata.js";
 import { extractPdfDocumentSnapshot } from "./pdf.js";
 import { searchBibtexFromPdf } from "./search.js";
@@ -57,9 +57,16 @@ export function createProgram(): Command {
       "--weights <weights>",
       "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
     )
+    .option(
+      "-t, --timeout <seconds>",
+      "Maximum search stage duration in seconds.",
+      parsePositiveInteger,
+      Math.round(defaultSearchTimeoutMs / 1000)
+    )
     .action(async (pdf: string, options: SearchCommandOptions) => {
       const response = await searchBibtexFromPdf(pdf, {
         pages: options.pages,
+        timeoutMs: options.timeout * 1000,
         preferences: {
           limit: options.limit,
           sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
@@ -77,7 +84,6 @@ export function createProgram(): Command {
         if (!selected) {
           return;
         }
-        process.stdout.write(formatSelectedResult(selected, "bibtex"));
         return;
       }
 
@@ -99,6 +105,12 @@ export function createProgram(): Command {
       "--weights <weights>",
       "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
     )
+    .option(
+      "-t, --timeout <seconds>",
+      "Maximum search stage duration in seconds.",
+      parsePositiveInteger,
+      Math.round(defaultSearchTimeoutMs / 1000)
+    )
     .action(async (bibtexPath: string, options: UpdateBibtexCommandOptions) => {
       if (options.output && options.inPlace) {
         throw new Error("Use either --output or --in-place, not both.");
@@ -109,7 +121,8 @@ export function createProgram(): Command {
           limit: options.limit,
           sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
           weights: options.weights ? parseWeights(options.weights) : undefined
-        }
+        },
+        timeoutMs: options.timeout * 1000
       });
 
       if (result.sourceErrors.length > 0) {
@@ -150,9 +163,16 @@ export function createProgram(): Command {
       "--weights <weights>",
       "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
     )
+    .option(
+      "-t, --timeout <seconds>",
+      "Maximum search stage duration in seconds.",
+      parsePositiveInteger,
+      Math.round(defaultSearchTimeoutMs / 1000)
+    )
     .action(async (pdf: string, options: SelectCommandOptions) => {
       const response = await searchBibtexFromPdf(pdf, {
         pages: options.pages,
+        timeoutMs: options.timeout * 1000,
         preferences: {
           limit: options.limit,
           sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
@@ -170,6 +190,10 @@ export function createProgram(): Command {
         : await runInteractiveSelection(response.results, { sourceErrors: response.sourceErrors });
 
       if (!selected) {
+        return;
+      }
+
+      if (options.selectIndex === undefined) {
         return;
       }
 
@@ -200,6 +224,7 @@ interface SearchCommandOptions {
   limit?: number;
   sourcePriority?: string;
   weights?: string;
+  timeout: number;
 }
 
 interface SelectCommandOptions extends SearchCommandOptions {

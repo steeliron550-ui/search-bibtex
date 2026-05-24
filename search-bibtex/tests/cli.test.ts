@@ -26,6 +26,13 @@ describe("cli help", () => {
     expect(result.stdout).toContain(`Usage: search-bibtex ${command} [options]`);
     expect(result.stdout).toContain("-h, --help");
   });
+
+  it("prints timeout help for search", () => {
+    const result = runCli(["search", "--help"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("--timeout <seconds>");
+  });
 });
 
 describe("interactive search mode", () => {

@@ -2,6 +2,10 @@ import type { PaperSource, SearchSourceError } from "./types.js";
 
 export type FetchLike = typeof fetch;
 
+export interface FetchRequestOptions {
+  signal?: AbortSignal;
+}
+
 const USER_AGENT = "search-bibtex/0.1 (mailto:codex@local)";
 
 export class HttpRequestError extends Error {
@@ -16,8 +20,9 @@ export class HttpRequestError extends Error {
   }
 }
 
-export async function fetchJson<T>(fetcher: FetchLike, url: string): Promise<T> {
+export async function fetchJson<T>(fetcher: FetchLike, url: string, options: FetchRequestOptions = {}): Promise<T> {
   const response = await fetcher(url, {
+    signal: options.signal,
     headers: {
       Accept: "application/json",
       "User-Agent": USER_AGENT
@@ -31,8 +36,14 @@ export async function fetchJson<T>(fetcher: FetchLike, url: string): Promise<T> 
   return (await response.json()) as T;
 }
 
-export async function fetchText(fetcher: FetchLike, url: string, accept: string): Promise<string> {
+export async function fetchText(
+  fetcher: FetchLike,
+  url: string,
+  accept: string,
+  options: FetchRequestOptions = {}
+): Promise<string> {
   const response = await fetcher(url, {
+    signal: options.signal,
     headers: {
       Accept: accept,
       "User-Agent": USER_AGENT
