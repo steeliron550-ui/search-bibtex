@@ -22,6 +22,14 @@ export interface BibliographySearchOptions {
   fetcher?: FetchLike;
   preferences?: SearchPreferenceInput;
   pages?: number;
+  onProgress?: (event: SearchProgressEvent) => void;
+}
+
+export interface SearchProgressEvent {
+  completed: number;
+  total: number;
+  completedSources: PaperSource[];
+  failedSources: PaperSource[];
 }
 
 export interface SearchPreferenceInput {
@@ -56,15 +64,33 @@ export async function searchBibtex(
   const preferences = mergeSearchPreferences(options.preferences);
   const queries = generateSearchQueries(metadata);
   const fetcher = options.fetcher ?? fetch;
+  const onProgress = options.onProgress;
   const sourceErrors: SearchSourceError[] = [];
   const candidates: BibliographicCandidate[] = [];
+  const completedSources: PaperSource[] = [];
+  const failedSources: PaperSource[] = [];
+
+  onProgress?.({
+    completed: 0,
+    total: preferences.sourcePriority.length,
+    completedSources: [],
+    failedSources: []
+  });
 
   for (const source of preferences.sourcePriority) {
     try {
       candidates.push(...await searchSource(source, { metadata, queries, fetcher, limit: preferences.limit }));
+      completedSources.push(source);
     } catch (error) {
+      failedSources.push(source);
       sourceErrors.push(toSourceError(source, queries[0]?.value ?? metadata.title ?? metadata.filePath, error));
     }
+    onProgress?.({
+      completed: completedSources.length + failedSources.length,
+      total: preferences.sourcePriority.length,
+      completedSources: [...completedSources],
+      failedSources: [...failedSources]
+    });
   }
 
   const ranked = rankBibliographicCandidates(metadata, candidates, preferences).slice(0, preferences.limit * 2);

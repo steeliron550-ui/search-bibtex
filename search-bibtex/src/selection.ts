@@ -43,6 +43,9 @@ interface KeypressKey {
   meta?: boolean;
 }
 
+const searchIndexCache = new WeakMap<SearchResult, string>();
+const visibleIndexCache = new WeakMap<readonly SearchResult[], Map<string, number[]>>();
+
 export function createSelectionState(): SelectionState {
   return {
     cursor: 0,
@@ -116,22 +119,33 @@ export function updateSelectionState(
 
 export function visibleIndexes(results: SearchResult[], filter: string): number[] {
   const normalizedFilter = normalizeFilter(filter);
-  return results
-    .map((result, index) => ({ result, index }))
-    .filter(({ result }) => {
-      if (!normalizedFilter) {
-        return true;
+  let resultCache = visibleIndexCache.get(results);
+  if (resultCache === undefined) {
+    resultCache = new Map<string, number[]>();
+    visibleIndexCache.set(results, resultCache);
+  }
+
+  const cached = resultCache.get(normalizedFilter);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  let visible: number[];
+  if (!normalizedFilter) {
+    visible = new Array<number>(results.length);
+    for (let index = 0; index < results.length; index += 1) {
+      visible[index] = index;
+    }
+  } else {
+    visible = [];
+    for (let index = 0; index < results.length; index += 1) {
+      if (searchIndexForResult(results[index]).includes(normalizedFilter)) {
+        visible.push(index);
       }
-      return normalizeFilter([
-        result.title,
-        result.authors.join(" "),
-        result.venue ?? "",
-        result.source,
-        result.doi ?? "",
-        result.arxivId ?? ""
-      ].join(" ")).includes(normalizedFilter);
-    })
-    .map(({ index }) => index);
+    }
+  }
+  resultCache.set(normalizedFilter, visible);
+  return visible;
 }
 
 export function renderSelection(
@@ -297,6 +311,24 @@ function clampCursor(cursor: number, visibleCount: number): number {
 
 function normalizeFilter(value: string): string {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function searchIndexForResult(result: SearchResult): string {
+  const cached = searchIndexCache.get(result);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const normalized = normalizeFilter([
+    result.title,
+    result.authors.join(" "),
+    result.venue ?? "",
+    result.source,
+    result.doi ?? "",
+    result.arxivId ?? ""
+  ].join(" "));
+  searchIndexCache.set(result, normalized);
+  return normalized;
 }
 
 function formatBibtexPreview(result: SearchResult, mode: PreviewMode, color = false): string[] {

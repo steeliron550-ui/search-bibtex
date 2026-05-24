@@ -64,7 +64,8 @@ export function createProgram(): Command {
           limit: options.limit,
           sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
           weights: options.weights ? parseWeights(options.weights) : undefined
-        }
+        },
+        onProgress: createSearchProgressReporter("search")
       });
 
       if (response.results.length === 0 && response.sourceErrors.length > 0) {
@@ -156,7 +157,8 @@ export function createProgram(): Command {
           limit: options.limit,
           sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
           weights: options.weights ? parseWeights(options.weights) : undefined
-        }
+        },
+        onProgress: createSearchProgressReporter("select")
       });
 
       if (response.sourceErrors.length > 0) {
@@ -258,4 +260,21 @@ export function shouldUseInteractiveSearch(
 
 export async function main(argv = process.argv): Promise<void> {
   await createProgram().parseAsync(argv);
+}
+
+function createSearchProgressReporter(prefix: string): (event: { completed: number; total: number; completedSources: PaperSource[]; failedSources: PaperSource[]; }) => void {
+  if (!process.stderr.isTTY) {
+    return () => {};
+  }
+
+  return (event) => {
+    if (event.completed === 0) {
+      process.stderr.write(`${prefix}: searching ${event.total} source channels...\n`);
+      return;
+    }
+
+    const completed = event.completedSources.length > 0 ? `completed [${event.completedSources.join(", ")}]` : "completed []";
+    const failed = event.failedSources.length > 0 ? ` failed [${event.failedSources.join(", ")}]` : "";
+    process.stderr.write(`${prefix}: ${event.completed}/${event.total} source channels ${completed}${failed}\n`);
+  };
 }

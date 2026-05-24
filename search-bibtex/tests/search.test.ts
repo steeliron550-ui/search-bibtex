@@ -116,6 +116,33 @@ describe("search aggregation", () => {
       })
     ]);
   });
+
+  it("reports source search progress as each channel completes", async () => {
+    const events: Array<{ completed: number; total: number; completedSources: string[]; failedSources: string[] }> = [];
+
+    await searchBibtex(metadata, {
+      fetcher: fakeFetch,
+      preferences: {
+        sourcePriority: ["dblp", "crossref", "semantic-scholar"],
+        limit: 3
+      },
+      onProgress: (event) => {
+        events.push({
+          completed: event.completed,
+          total: event.total,
+          completedSources: [...event.completedSources],
+          failedSources: [...event.failedSources]
+        });
+      }
+    });
+
+    expect(events).toEqual([
+      { completed: 0, total: 3, completedSources: [], failedSources: [] },
+      { completed: 1, total: 3, completedSources: ["dblp"], failedSources: [] },
+      { completed: 2, total: 3, completedSources: ["dblp", "crossref"], failedSources: [] },
+      { completed: 3, total: 3, completedSources: ["dblp", "crossref"], failedSources: ["semantic-scholar"] }
+    ]);
+  });
 });
 
 async function fakeFetch(input: RequestInfo | URL): Promise<Response> {

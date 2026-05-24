@@ -91,6 +91,8 @@ search-bibtex search paper.pdf \
   --limit 5
 ```
 
+终端里会先显示源搜索进度提示，然后再进入选择器。
+
 交互选择 BibTeX：
 
 ```bash
