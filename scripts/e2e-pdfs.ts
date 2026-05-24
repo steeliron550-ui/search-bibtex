@@ -38,8 +38,7 @@ const samples: SampleExpectation[] = [
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const projectDir = path.resolve(scriptDir, "..");
-const repoDir = path.resolve(projectDir, "..");
-const pdfDir = path.join(repoDir, "pdfs");
+const pdfDir = path.join(projectDir, "pdfs");
 const sourcePriority: PaperSource[] = ["dblp", "crossref", "openalex", "doi"];
 
 async function main(): Promise<void> {

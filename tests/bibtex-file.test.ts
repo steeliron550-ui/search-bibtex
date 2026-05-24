@@ -6,7 +6,7 @@ import { parseBibtexDocument, refineBibtexDocument } from "../src/bibtex-file.js
 
 describe("BibTeX parsing", () => {
   it("extracts titles and citation keys from the sample BibTeX format", async () => {
-    const text = await readFile(new URL("../../pdfs/test.bib", import.meta.url), "utf8");
+    const text = await readFile(new URL("../pdfs/test.bib", import.meta.url), "utf8");
     const entries = parseBibtexDocument(text).flatMap((segment) => (segment.kind === "entry" && segment.entry ? [segment.entry] : []));
 
     expect(entries[0]).toMatchObject({
