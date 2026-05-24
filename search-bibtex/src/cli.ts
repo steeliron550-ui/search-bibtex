@@ -45,7 +45,7 @@ export function createProgram(): Command {
 
   program
     .command("search")
-    .description("Extract local PDF metadata, search bibliographic sources, rank candidates, and fetch BibTeX.")
+    .description("Extract local PDF metadata, search bibliographic sources, rank candidates, and choose interactively in a TTY.")
     .argument("<pdf>", "Path to a local PDF file.")
     .option("-p, --pages <count>", "Number of leading pages to inspect.", parsePositiveInteger, 2)
     .option("-l, --limit <count>", "Maximum ranked BibTeX candidates to return.", parsePositiveInteger)
@@ -69,6 +69,12 @@ export function createProgram(): Command {
 
       if (response.results.length === 0 && response.sourceErrors.length > 0) {
         throw new Error(`Search returned no results. Source errors: ${JSON.stringify(response.sourceErrors)}`);
+      }
+
+      if (shouldUseInteractiveSearch() && response.results.length > 1) {
+        const selected = await runInteractiveSelection(response.results, { sourceErrors: response.sourceErrors });
+        process.stdout.write(formatSelectedResult(selected, "bibtex"));
+        return;
       }
 
       process.stdout.write(`${JSON.stringify(response, null, 2)}\n`);
@@ -236,12 +242,13 @@ function parseOutputFormat(value: string): "bibtex" | "json" {
   return value;
 }
 
+export function shouldUseInteractiveSearch(
+  stdinIsTTY: boolean | undefined = process.stdin.isTTY,
+  stdoutIsTTY: boolean | undefined = process.stdout.isTTY
+): boolean {
+  return Boolean(stdinIsTTY && stdoutIsTTY);
+}
+
 export async function main(argv = process.argv): Promise<void> {
   await createProgram().parseAsync(argv);
 }
-
-main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.stack ?? error.message : String(error);
-  process.stderr.write(`${message}\n`);
-  process.exitCode = 1;
-});
