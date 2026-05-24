@@ -5,6 +5,11 @@ import { defaultSearchPreferences } from "./config.js";
 import { buildMetadataCandidate, generateSearchQueries } from "./metadata.js";
 import { extractPdfDocumentSnapshot } from "./pdf.js";
 import { searchBibtexFromPdf } from "./search.js";
+import {
+  formatSelectedResult,
+  runInteractiveSelection,
+  selectedResultByIndex
+} from "./selection.js";
 import type { PaperSource, SortWeights } from "./types.js";
 
 export function createProgram(): Command {
@@ -66,6 +71,48 @@ export function createProgram(): Command {
       process.stdout.write(`${JSON.stringify(response, null, 2)}\n`);
     });
 
+  program
+    .command("select")
+    .description("Search a local PDF and choose one BibTeX candidate interactively or by index.")
+    .argument("<pdf>", "Path to a local PDF file.")
+    .option("-p, --pages <count>", "Number of leading pages to inspect.", parsePositiveInteger, 2)
+    .option("-l, --limit <count>", "Maximum ranked BibTeX candidates to return.", parsePositiveInteger)
+    .option("--select-index <index>", "Choose a result by 0-based index without interactive UI.", parseNonNegativeInteger)
+    .option(
+      "--format <format>",
+      "Output format for the selected result.",
+      parseOutputFormat,
+      "bibtex"
+    )
+    .option(
+      "--source-priority <sources>",
+      "Comma-separated source priority, e.g. dblp,arxiv,crossref,openalex,doi."
+    )
+    .option(
+      "--weights <weights>",
+      "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
+    )
+    .action(async (pdf: string, options: SelectCommandOptions) => {
+      const response = await searchBibtexFromPdf(pdf, {
+        pages: options.pages,
+        preferences: {
+          limit: options.limit,
+          sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
+          weights: options.weights ? parseWeights(options.weights) : undefined
+        }
+      });
+
+      if (response.sourceErrors.length > 0) {
+        process.stderr.write(`${JSON.stringify({ sourceErrors: response.sourceErrors }, null, 2)}\n`);
+      }
+
+      const selected = options.selectIndex !== undefined
+        ? selectedResultByIndex(response.results, options.selectIndex)
+        : await runInteractiveSelection(response.results, { sourceErrors: response.sourceErrors });
+
+      process.stdout.write(formatSelectedResult(selected, options.format));
+    });
+
   return program;
 }
 
@@ -77,11 +124,24 @@ function parsePositiveInteger(value: string): number {
   return parsed;
 }
 
+function parseNonNegativeInteger(value: string): number {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`Expected a non-negative integer, got ${value}`);
+  }
+  return parsed;
+}
+
 interface SearchCommandOptions {
   pages: number;
   limit?: number;
   sourcePriority?: string;
   weights?: string;
+}
+
+interface SelectCommandOptions extends SearchCommandOptions {
+  selectIndex?: number;
+  format: "bibtex" | "json";
 }
 
 function parseSourcePriority(value: string): PaperSource[] {
@@ -114,6 +174,13 @@ function parseWeights(value: string): Partial<SortWeights> {
   }
 
   return weights;
+}
+
+function parseOutputFormat(value: string): "bibtex" | "json" {
+  if (value !== "bibtex" && value !== "json") {
+    throw new Error(`Unknown output format: ${value}`);
+  }
+  return value;
 }
 
 export async function main(argv = process.argv): Promise<void> {
