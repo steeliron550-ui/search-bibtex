@@ -75,7 +75,7 @@ export function createProgram(): Command {
     });
 
   program
-    .command("update-bibtex")
+    .command("update")
     .description("Refresh an existing BibTeX file by fuzzy-matching titles and preserving citation keys.")
     .argument("<bibtex>", "Path to a local BibTeX file.")
     .option("-o, --output <path>", "Write the updated BibTeX to a file.")

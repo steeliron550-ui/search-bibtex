@@ -110,7 +110,7 @@ stdout BibTeX / JSON
 
 `selection.ts` 包含可测试的选择器状态机和真实 TTY 交互。状态机不依赖终端 IO，单元测试应优先覆盖该层。
 
-`cli.ts` 用 Commander 暴露 `config-defaults`、`metadata`、`search`、`update-bibtex` 和 `select` 命令。
+`cli.ts` 用 Commander 暴露 `config-defaults`、`metadata`、`search`、`update` 和 `select` 命令。
 
 `index.ts` 导出库 API，脚本和未来集成都应从这里导入公共能力。
 
