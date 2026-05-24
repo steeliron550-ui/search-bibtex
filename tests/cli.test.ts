@@ -4,7 +4,14 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { shouldUseInteractiveSearch, splitDelimitedValues } from "../src/cli.js";
+import {
+  collectInteractiveTitleSelections,
+  collectTitleSearchResponses,
+  formatSelectedTitleSearchResults,
+  shouldUseInteractiveSearch,
+  splitDelimitedValues
+} from "../src/cli.js";
+import type { SearchResponse, SearchResult } from "../src/types.js";
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -77,6 +84,62 @@ describe("title splitting", () => {
   });
 });
 
+describe("title search workflow", () => {
+  it("searches and selects multiple titles sequentially", async () => {
+    const first = makeResult("PagedAttention", "@article{paged}");
+    const second = makeResult("DistServe", "@article{dist}");
+    const events: string[] = [];
+
+    const selected = await collectInteractiveTitleSelections(
+      ["PagedAttention", "DistServe"],
+      async (title, index) => {
+        events.push(`search:${index}:${title}`);
+        return makeResponse(title, [index === 0 ? first : second]);
+      },
+      async (results, options) => {
+        events.push(`select:${results[0].title}:${options.sourceErrors?.length ?? 0}`);
+        return results[0];
+      }
+    );
+
+    expect(events).toEqual([
+      "search:0:PagedAttention",
+      "select:PagedAttention:0",
+      "search:1:DistServe",
+      "select:DistServe:0"
+    ]);
+    expect(selected).toEqual([first, second]);
+  });
+
+  it("returns undefined when a title selection is cancelled", async () => {
+    const selected = await collectInteractiveTitleSelections(
+      ["PagedAttention"],
+      async (title) => makeResponse(title, [makeResult(title, "@article{paged}")]),
+      async () => undefined
+    );
+
+    expect(selected).toBeUndefined();
+  });
+
+  it("collects non-interactive title responses in input order", async () => {
+    const responses = await collectTitleSearchResponses(
+      ["PagedAttention", "DistServe"],
+      async (title, index) => makeResponse(title, [makeResult(`${index}:${title}`, `@article{${index}}`)])
+    );
+
+    expect(responses.map((entry) => entry.title)).toEqual(["PagedAttention", "DistServe"]);
+    expect(responses[0].response.results[0].bibtex).toBe("@article{0}");
+    expect(responses[1].response.results[0].bibtex).toBe("@article{1}");
+  });
+
+  it("formats selected title results as final BibTeX output", () => {
+    expect(formatSelectedTitleSearchResults([
+      makeResult("PagedAttention", "@article{paged}"),
+      makeResult("DistServe", "@inproceedings{dist}")
+    ])).toBe("@article{paged}\n\n@inproceedings{dist}\n");
+  });
+});
+
 function runCli(args: string[]): { status: number | null; stdout: string; stderr: string } {
   return spawnSync(pnpmCommand(), ["exec", "tsx", "src/main.ts", ...args], {
     cwd: projectDir,
@@ -86,4 +149,43 @@ function runCli(args: string[]): { status: number | null; stdout: string; stderr
 
 function pnpmCommand(): string {
   return process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+}
+
+function makeResponse(title: string, results: SearchResult[]): SearchResponse {
+  return {
+    metadata: {
+      filePath: `stdin:title:${title}`,
+      pageCount: 0,
+      title,
+      authors: [],
+      textSample: title
+    },
+    queries: [{
+      kind: "title",
+      value: title,
+      confidence: 0.78
+    }],
+    results,
+    sourceErrors: []
+  };
+}
+
+function makeResult(title: string, bibtex: string): SearchResult {
+  return {
+    source: "dblp",
+    title,
+    authors: ["Example Author"],
+    year: 2024,
+    venue: "OSDI",
+    matchedQuery: "title",
+    score: 1,
+    scoreBreakdown: {
+      title: 1,
+      author: 0,
+      year: 0,
+      identifier: 0,
+      source: 1
+    },
+    bibtex
+  };
 }

@@ -17,7 +17,15 @@ import {
   runInteractiveSelection,
   selectedResultByIndex
 } from "./selection.js";
-import { builtinPaperSources, type PaperSource, type SearchPreferences, type SortWeights } from "./types.js";
+import {
+  builtinPaperSources,
+  type PaperSource,
+  type SearchPreferences,
+  type SearchResponse,
+  type SearchResult,
+  type SearchSourceError,
+  type SortWeights
+} from "./types.js";
 
 export function createProgram(): Command {
   const program = new Command();
@@ -253,23 +261,26 @@ export function createProgram(): Command {
         return;
       }
 
-      const responses = [];
-      for (const [index, title] of titleInputs.entries()) {
-        const response = await searchBibtex(buildTitleMetadataCandidate(title, `stdin:title:${index + 1}`), {
+      const runTitleSearch: TitleSearchRunner = async (title, index) => {
+        return await searchBibtex(buildTitleMetadataCandidate(title, `stdin:title:${index + 1}`), {
           parallel: options.parallel ?? config.search.parallel,
           timeoutMs: (options.timeout ?? config.search.timeoutSeconds) * 1000,
           preferences: buildSearchPreferences(options, config),
           customSources: config.sources,
           onProgress: createSearchProgressReporter(`search-title[${index + 1}]`)
         });
+      };
 
-        if (response.results.length === 0 && response.sourceErrors.length > 0) {
-          throw new Error(`Search returned no results for title ${title}. Source errors: ${JSON.stringify(response.sourceErrors)}`);
+      if (shouldUseInteractiveSearch()) {
+        const selectedResults = await collectInteractiveTitleSelections(titleInputs, runTitleSearch);
+        if (!selectedResults) {
+          return;
         }
-
-        responses.push({ title, response });
+        process.stdout.write(formatSelectedTitleSearchResults(selectedResults));
+        return;
       }
 
+      const responses = await collectTitleSearchResponses(titleInputs, runTitleSearch);
       process.stdout.write(`${JSON.stringify({ titles: responses }, null, 2)}\n`);
     });
 
@@ -353,6 +364,55 @@ interface TitleSearchCommandOptions extends SearchExecutionOptions {
   delimiter: string;
 }
 
+export interface TitleSearchResponseEntry {
+  title: string;
+  response: SearchResponse;
+}
+
+export type TitleSearchRunner = (title: string, index: number) => Promise<SearchResponse>;
+export type TitleSelectionRunner = (
+  results: SearchResult[],
+  options: { sourceErrors?: SearchSourceError[] }
+) => Promise<SearchResult | undefined>;
+
+export async function collectTitleSearchResponses(
+  titleInputs: string[],
+  search: TitleSearchRunner
+): Promise<TitleSearchResponseEntry[]> {
+  const responses: TitleSearchResponseEntry[] = [];
+  for (const [index, title] of titleInputs.entries()) {
+    const response = await search(title, index);
+    throwIfTitleSearchFailed(title, response);
+    responses.push({ title, response });
+  }
+  return responses;
+}
+
+export async function collectInteractiveTitleSelections(
+  titleInputs: string[],
+  search: TitleSearchRunner,
+  select: TitleSelectionRunner = runInteractiveSelection
+): Promise<SearchResult[] | undefined> {
+  const selectedResults: SearchResult[] = [];
+  for (const [index, title] of titleInputs.entries()) {
+    const response = await search(title, index);
+    throwIfTitleSearchFailed(title, response);
+    const selected = await select(response.results, { sourceErrors: response.sourceErrors });
+    if (!selected) {
+      return undefined;
+    }
+    selectedResults.push(selected);
+  }
+  return selectedResults;
+}
+
+export function formatSelectedTitleSearchResults(results: SearchResult[]): string {
+  if (results.length === 0) {
+    return "";
+  }
+  return `${results.map((result) => formatSelectedResult(result, "bibtex").trimEnd()).join("\n\n")}\n`;
+}
+
 function buildSearchPreferences(options: SearchExecutionOptions, config: ResolvedAppConfig): SearchPreferences {
   const knownSources = new Set<PaperSource>([
     ...builtinPaperSources,
@@ -369,6 +429,12 @@ function buildSearchPreferences(options: SearchExecutionOptions, config: Resolve
       }
       : config.search.weights
   };
+}
+
+function throwIfTitleSearchFailed(title: string, response: SearchResponse): void {
+  if (response.results.length === 0 && response.sourceErrors.length > 0) {
+    throw new Error(`Search returned no results for title ${title}. Source errors: ${JSON.stringify(response.sourceErrors)}`);
+  }
 }
 
 function parseSourcePriority(value: string, knownSources: ReadonlySet<PaperSource>): PaperSource[] {
