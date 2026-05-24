@@ -1,4 +1,4 @@
 interface:
   display_name: "Search BibTeX"
   short_description: "Find and choose BibTeX from paper PDFs"
-  default_prompt: "Use $search-bibtex to extract metadata from this paper PDF, search bibliographic sources, and let me choose a BibTeX entry."
+  default_prompt: "Use $search-bibtex to extract metadata from this paper PDF, search bibliographic sources, let me choose a BibTeX entry, or refresh an existing .bib file while keeping citation keys unchanged."

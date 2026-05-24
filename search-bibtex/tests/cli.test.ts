@@ -16,12 +16,12 @@ describe("cli help", () => {
     expect(result.stdout).toContain("-h, --help");
   });
 
-  it.each(["--help", "-h"])("prints subcommand help with %s", (flag) => {
-    const result = runCli(["select", flag]);
+  it.each(["select", "update-bibtex"])("prints subcommand help for %s", (command) => {
+    const result = runCli([command, "--help"]);
 
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("Usage: search-bibtex select [options] <pdf>");
+    expect(result.stdout).toContain(`Usage: search-bibtex ${command} [options]`);
     expect(result.stdout).toContain("-h, --help");
   });
 });
