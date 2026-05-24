@@ -20,6 +20,14 @@ export interface SearchPreferences {
   limit: number;
 }
 
+export interface ScoreBreakdown {
+  title: number;
+  author: number;
+  year: number;
+  identifier: number;
+  source: number;
+}
+
 export interface PdfMetadataCandidate {
   filePath: string;
   pageCount: number;
@@ -54,6 +62,7 @@ export interface SearchQueryCandidate {
 
 export interface SearchResult {
   source: PaperSource;
+  sourceId?: string;
   title: string;
   authors: string[];
   year?: number;
@@ -61,6 +70,22 @@ export interface SearchResult {
   arxivId?: string;
   venue?: string;
   url?: string;
-  bibtex?: string;
+  matchedQuery: SearchQueryKind;
   score: number;
+  scoreBreakdown: ScoreBreakdown;
+  bibtex: string;
+}
+
+export interface SearchSourceError {
+  source: PaperSource;
+  query: string;
+  message: string;
+  status?: number;
+}
+
+export interface SearchResponse {
+  metadata: PdfMetadataCandidate;
+  queries: SearchQueryCandidate[];
+  results: SearchResult[];
+  sourceErrors: SearchSourceError[];
 }

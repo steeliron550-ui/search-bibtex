@@ -1,7 +1,7 @@
 import type { SearchPreferences } from "./types.js";
 
 export const defaultSearchPreferences: SearchPreferences = {
-  sourcePriority: ["arxiv", "crossref", "semantic-scholar", "openalex", "dblp", "doi"],
+  sourcePriority: ["dblp", "arxiv", "crossref", "openalex", "doi", "semantic-scholar"],
   weights: {
     title: 0.45,
     author: 0.2,
