@@ -73,6 +73,9 @@ export function createProgram(): Command {
 
       if (shouldUseInteractiveSearch() && response.results.length > 1) {
         const selected = await runInteractiveSelection(response.results, { sourceErrors: response.sourceErrors });
+        if (!selected) {
+          return;
+        }
         process.stdout.write(formatSelectedResult(selected, "bibtex"));
         return;
       }
@@ -163,6 +166,10 @@ export function createProgram(): Command {
       const selected = options.selectIndex !== undefined
         ? selectedResultByIndex(response.results, options.selectIndex)
         : await runInteractiveSelection(response.results, { sourceErrors: response.sourceErrors });
+
+      if (!selected) {
+        return;
+      }
 
       process.stdout.write(formatSelectedResult(selected, options.format));
     });
