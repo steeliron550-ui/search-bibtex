@@ -1,7 +1,34 @@
-import type { PdfMetadataCandidate, SearchQueryCandidate } from "./types.js";
+import path from "node:path";
+
+import type {
+  PdfDocumentSnapshot,
+  PdfMetadataCandidate,
+  SearchQueryCandidate
+} from "./types.js";
 
 const DOI_PATTERN = /\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i;
 const ARXIV_PATTERN = /\b(?:arxiv\s*:\s*)?([0-9]{4}\.[0-9]{4,5})(v[0-9]+)?\b/i;
+const YEAR_PATTERN = /\b(19[7-9][0-9]|20[0-9]{2})\b/g;
+
+const FRONT_MATTER_PATTERNS = [
+  /^proceedings of /i,
+  /^volume \d+/i,
+  /^pages? /i,
+  /^july |^august |^september |^october |^november |^december |^january |^february |^march |^april |^may |^june /i,
+  /^copyright /i,
+  /^latest updates:/i,
+  /^research-article$/i,
+  /^open access support/i,
+  /^view all$/i,
+  /^\.+$/,
+  /^industry track paper$/i
+];
+
+const AFFILIATION_PATTERNS = [
+  /@/,
+  /^https?:\/\//i,
+  /\b(university|institute|school|department|laboratory|lab|college|academy|huawei|deepseek|microsoft|google|meta|amazon|china|usa|canada|uk|germany|france|japan)\b/i
+];
 
 export function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
@@ -61,4 +88,226 @@ export function generateSearchQueries(candidate: PdfMetadataCandidate): SearchQu
   }
 
   return queries;
+}
+
+export function buildMetadataCandidate(snapshot: PdfDocumentSnapshot): PdfMetadataCandidate {
+  const filename = path.basename(snapshot.filePath);
+  const filenameText = filename.replace(/\.pdf$/i, "");
+  const combinedText = `${filenameText}\n${snapshot.info.title ?? ""}\n${snapshot.info.author ?? ""}\n${snapshot.text}`;
+  const titleMatch = detectTitle(snapshot);
+  const title = cleanTitle(snapshot.info.title) ?? titleMatch.title ?? titleFromFilename(filenameText);
+  const authors = parseAuthors(snapshot, titleMatch.endLineIndex);
+  const doi = extractDoi(combinedText);
+  const arxivId = extractArxivId(combinedText);
+  const year = detectYear(filenameText, snapshot.text, arxivId);
+
+  return {
+    filePath: snapshot.filePath,
+    pageCount: snapshot.pageCount,
+    title,
+    authors,
+    year,
+    doi,
+    arxivId,
+    textSample: normalizeWhitespace(snapshot.text).slice(0, 1200)
+  };
+}
+
+interface TitleMatch {
+  title?: string;
+  endLineIndex: number;
+}
+
+function detectTitle(snapshot: PdfDocumentSnapshot): TitleMatch {
+  const lines = snapshot.lines.map(normalizeLine).filter(Boolean);
+  const abstractIndex = lines.findIndex((line) => /^abstract$/i.test(line));
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!isTitleStart(line)) {
+      continue;
+    }
+
+    const parts = [cleanTitlePart(line)];
+    let endLineIndex = index;
+
+    for (let next = index + 1; next < lines.length; next += 1) {
+      const nextLine = lines[next];
+      if (abstractIndex !== -1 && next >= abstractIndex) {
+        break;
+      }
+      if (!isTitleContinuation(nextLine)) {
+        break;
+      }
+      parts.push(cleanTitlePart(nextLine));
+      endLineIndex = next;
+    }
+
+    const title = cleanTitle(parts.join(" "));
+    if (title) {
+      return { title, endLineIndex };
+    }
+  }
+
+  return { endLineIndex: -1 };
+}
+
+function cleanTitle(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = normalizeWhitespace(value.replace(/\s+-\s+/g, "-"));
+  if (normalized.length < 8 || /\.pdf$/i.test(normalized)) {
+    return undefined;
+  }
+  return normalized.replace(/[.,;:]+$/, "");
+}
+
+function cleanTitlePart(value: string): string {
+  return normalizeWhitespace(value.replace(/[*.†‡♣♢♡♠+]+/g, ""));
+}
+
+function isTitleStart(line: string): boolean {
+  if (isFrontMatter(line) || isAffiliation(line)) {
+    return false;
+  }
+  if (line.length < 8 || line.length > 180) {
+    return false;
+  }
+  if (/^abstract$/i.test(line)) {
+    return false;
+  }
+  return /[A-Za-z]/.test(line);
+}
+
+function isTitleContinuation(line: string): boolean {
+  if (isFrontMatter(line) || isAffiliation(line)) {
+    return false;
+  }
+  if (/^abstract$/i.test(line)) {
+    return false;
+  }
+  if (looksLikeAuthorLine(line)) {
+    return false;
+  }
+  if (line.length < 4 || line.length > 160) {
+    return false;
+  }
+  return /[A-Za-z]/.test(line);
+}
+
+function isFrontMatter(line: string): boolean {
+  return FRONT_MATTER_PATTERNS.some((pattern) => pattern.test(line));
+}
+
+function isAffiliation(line: string): boolean {
+  return AFFILIATION_PATTERNS.some((pattern) => pattern.test(line));
+}
+
+function looksLikeAuthorLine(line: string): boolean {
+  if (/[♣♢♡♠†‡∗*]/.test(line)) {
+    return true;
+  }
+  if (/\b[A-Z][a-z]+ [A-Z][a-z]+(?:\s+[0-9,]+)?\s+[A-Z][a-z]+ [A-Z][a-z]+/.test(line)) {
+    return true;
+  }
+  if (/^[A-Z][A-Z-]+ [A-Z][A-Z-]+,/.test(line)) {
+    return true;
+  }
+  return false;
+}
+
+function parseAuthors(snapshot: PdfDocumentSnapshot, titleEndLineIndex: number): string[] {
+  if (snapshot.info.author) {
+    const infoAuthors = splitAuthorText(snapshot.info.author);
+    if (infoAuthors.length > 0) {
+      return infoAuthors;
+    }
+  }
+
+  if (titleEndLineIndex < 0) {
+    return [];
+  }
+
+  const lines = snapshot.lines.map(normalizeLine).filter(Boolean);
+  const abstractIndex = lines.findIndex((line) => /^abstract$/i.test(line));
+  const end = abstractIndex === -1 ? Math.min(lines.length, titleEndLineIndex + 18) : abstractIndex;
+  const authorLines = lines.slice(titleEndLineIndex + 1, end);
+  const authors: string[] = [];
+
+  for (const line of authorLines) {
+    if (isFrontMatter(line)) {
+      continue;
+    }
+    authors.push(...splitAuthorText(line));
+    if (authors.length >= 12) {
+      break;
+    }
+  }
+
+  return uniqueValues(authors).slice(0, 12);
+}
+
+function splitAuthorText(value: string): string[] {
+  const cleaned = normalizeWhitespace(
+    value
+      .replace(/[♣♢♡♠†‡∗*+]/g, " ")
+      .replace(/\b[0-9]+(?:,[0-9]+)*\b/g, " ")
+      .replace(
+        /\s*,\s*.*\b(University|Institute|School|Department|Huawei|DeepSeek|Microsoft|Google|Meta|Amazon)\b.*$/i,
+        ""
+      )
+      .replace(/\s+/g, " ")
+  );
+
+  if (!cleaned || isAffiliation(cleaned)) {
+    return [];
+  }
+
+  const matches = cleaned.match(/\b[A-Z][A-Za-z'.-]+(?:\s+[A-Z]\.)?\s+[A-Z][A-Za-z'.-]+\b/g) ?? [];
+  return matches.map((author) => titleCaseAllCaps(author)).filter((author) => author.length >= 5);
+}
+
+function titleCaseAllCaps(value: string): string {
+  if (!/^[A-Z .'-]+$/.test(value)) {
+    return value;
+  }
+  return value
+    .toLowerCase()
+    .replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
+}
+
+function uniqueValues(values: string[]): string[] {
+  return [...new Set(values.map(normalizeWhitespace).filter(Boolean))];
+}
+
+function titleFromFilename(filenameText: string): string | undefined {
+  if (ARXIV_PATTERN.test(filenameText) || DOI_PATTERN.test(filenameText)) {
+    return undefined;
+  }
+
+  return cleanTitle(
+    filenameText
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .replace(/\bIndustry Track Paper\b/i, "")
+  );
+}
+
+function detectYear(filenameText: string, text: string, arxivId: string | undefined): number | undefined {
+  if (arxivId) {
+    const year = 2000 + Number.parseInt(arxivId.slice(0, 2), 10);
+    if (Number.isFinite(year)) {
+      return year;
+    }
+  }
+
+  const filenameYear = filenameText.match(YEAR_PATTERN)?.[0];
+  if (filenameYear) {
+    return Number.parseInt(filenameYear, 10);
+  }
+
+  const textYear = text.match(YEAR_PATTERN)?.[0];
+  return textYear ? Number.parseInt(textYear, 10) : undefined;
 }
