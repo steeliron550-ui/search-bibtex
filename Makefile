@@ -1,7 +1,8 @@
 PNPM ?= pnpm
 APP_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+.DEFAULT_GOAL := binary
 
-.PHONY: install build build-binary build-binaries clean prepare-test-dirs test typecheck test-e2e help
+.PHONY: install build binary build-binary build-binaries clean prepare-test-dirs test typecheck test-e2e help
 
 install:
 	$(PNPM) --dir $(APP_DIR) install
@@ -9,8 +10,10 @@ install:
 build:
 	$(PNPM) --dir $(APP_DIR) build
 
-build-binary:
+binary:
 	$(PNPM) --dir $(APP_DIR) build:binary
+
+build-binary: binary
 
 build-binaries:
 	$(PNPM) --dir $(APP_DIR) build:binaries
@@ -40,7 +43,7 @@ help:
 	@printf '%s\n' \
 		'install       Install pnpm dependencies' \
 		'build         Compile TypeScript sources' \
-		'build-binary  Build the current platform binary' \
+		'binary        Build the current platform binary' \
 		'build-binaries Build all platform binaries' \
 		'clean         Remove build outputs and caches' \
 		'test          Run unit tests' \
