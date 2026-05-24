@@ -6,12 +6,12 @@ import { parseBibtexDocument, refineBibtexDocument } from "../src/bibtex-file.js
 
 describe("BibTeX parsing", () => {
   it("extracts titles and citation keys from the sample BibTeX format", async () => {
-    const text = await readFile(new URL("../pdfs/test.bib", import.meta.url), "utf8");
+    const text = await readFile(new URL("./bibtex/acl_test.bib", import.meta.url), "utf8");
     const entries = parseBibtexDocument(text).flatMap((segment) => (segment.kind === "entry" && segment.entry ? [segment.entry] : []));
 
     expect(entries[0]).toMatchObject({
-      citationKey: "achiam2023gpt",
-      title: "Gpt-4 technical report"
+      citationKey: "du2023dp",
+      title: "Dp-forward: Fine-tuning and inference on language models with differential privacy in forward pass"
     });
   });
 });

@@ -124,13 +124,13 @@ search-bibtex select paper.pdf \
 更新现有 BibTeX 文件并保留引用名：
 
 ```bash
-search-bibtex update pdfs/test.bib --in-place
+search-bibtex update tests/bibtex/acl_test.bib --in-place
 ```
 
 写到新文件：
 
 ```bash
-search-bibtex update pdfs/test.bib --output updated.bib
+search-bibtex update tests/bibtex/acl_test.bib --output updated.bib
 ```
 
 搜索阶段默认超时 30 秒，可用 `--timeout` 调整。

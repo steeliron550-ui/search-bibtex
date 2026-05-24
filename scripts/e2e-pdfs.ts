@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -38,10 +40,15 @@ const samples: SampleExpectation[] = [
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const projectDir = path.resolve(scriptDir, "..");
-const pdfDir = path.join(projectDir, "pdfs");
+const pdfDir = path.join(projectDir, "tests", "pdfs");
 const sourcePriority: PaperSource[] = ["dblp", "crossref", "openalex", "doi"];
 
 async function main(): Promise<void> {
+  if (!existsSync(pdfDir) || (await readdir(pdfDir)).length === 0) {
+    process.stdout.write("Skipping e2e PDF test: tests/pdfs/ is empty.\n");
+    return;
+  }
+
   const reports: SampleReport[] = [];
 
   for (const sample of samples) {
