@@ -38,14 +38,13 @@ jobs:
       - name: Download build artifacts
         run: gh run download "$RUN_ID" -n "search-bibtex-binaries-$RUN_SHA" -D release-input
 
-      - name: Package release assets
+      - name: Package binary release assets
         run: |
           set -euo pipefail
           shopt -s nullglob
 
           release_dir="release-artifacts"
           mkdir -p "$release_dir"
-          git archive --format=tar.gz --output "$release_dir/search-bibtex-source.tar.gz" "$RUN_SHA"
 
           dist_bin_root="$(find release-input -type d -name dist-bin -print -quit)"
           if [ -z "$dist_bin_root" ]; then
