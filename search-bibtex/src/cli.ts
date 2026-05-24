@@ -2,6 +2,8 @@
 import { Command } from "commander";
 
 import { defaultSearchPreferences } from "./config.js";
+import { buildMetadataCandidate, generateSearchQueries } from "./metadata.js";
+import { extractPdfDocumentSnapshot } from "./pdf.js";
 
 export function createProgram(): Command {
   const program = new Command();
@@ -18,7 +20,28 @@ export function createProgram(): Command {
       process.stdout.write(`${JSON.stringify(defaultSearchPreferences, null, 2)}\n`);
     });
 
+  program
+    .command("metadata")
+    .description("Extract local PDF metadata and generate search queries.")
+    .argument("<pdf>", "Path to a local PDF file.")
+    .option("-p, --pages <count>", "Number of leading pages to inspect.", parsePositiveInteger, 2)
+    .action(async (pdf: string, options: { pages: number }) => {
+      const snapshot = await extractPdfDocumentSnapshot(pdf, { pages: options.pages });
+      const metadata = buildMetadataCandidate(snapshot);
+      const queries = generateSearchQueries(metadata);
+
+      process.stdout.write(`${JSON.stringify({ metadata, queries }, null, 2)}\n`);
+    });
+
   return program;
+}
+
+function parsePositiveInteger(value: string): number {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`Expected a positive integer, got ${value}`);
+  }
+  return parsed;
 }
 
 export async function main(argv = process.argv): Promise<void> {
