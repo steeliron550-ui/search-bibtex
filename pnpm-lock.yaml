@@ -17,6 +17,9 @@ importers:
       pdf-parse:
         specifier: ^1.1.1
         version: 1.1.1
+      smol-toml:
+        specifier: ^1.6.1
+        version: 1.6.1
     devDependencies:
       '@types/node':
         specifier: ^24.10.1
@@ -1090,6 +1093,10 @@ packages:
 
   simple-get@4.0.1:
     resolution: {integrity: sha512-brv7p5WgH0jmQJr1ZDDfKDOSeWWg+OVypG99A/5vYGPqJ6pxiaHLy8nxtFjBA7oMa01ebA9gfh1uMCFqOuXxvA==}
+
+  smol-toml@1.6.1:
+    resolution: {integrity: sha512-dWUG8F5sIIARXih1DTaQAX4SsiTXhInKf1buxdY9DIg4ZYPZK5nGM1VRIYmEbDbsHt7USo99xSLFu5Q1IqTmsg==}
+    engines: {node: '>= 18'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -2219,6 +2226,8 @@ snapshots:
       decompress-response: 6.0.0
       once: 1.4.0
       simple-concat: 1.0.1
+
+  smol-toml@1.6.1: {}
 
   source-map-js@1.2.1: {}
 

@@ -16,6 +16,7 @@ describe("cli help", () => {
     expect(result.stderr).toBe("");
     expect(result.stdout).toContain("Usage: search-bibtex [options] [command]");
     expect(result.stdout).toContain("-h, --help");
+    expect(result.stdout).toContain("config-template");
   });
 
   it.each(["select", "update"])("prints subcommand help for %s", (command) => {
@@ -24,6 +25,7 @@ describe("cli help", () => {
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
     expect(result.stdout).toContain(`Usage: search-bibtex ${command} [options]`);
+    expect(result.stdout).toContain("--config <path>");
     expect(result.stdout).toContain("-h, --help");
   });
 
@@ -31,8 +33,18 @@ describe("cli help", () => {
     const result = runCli(["search", "--help"]);
 
     expect(result.status).toBe(0);
+    expect(result.stdout).toContain("--config <path>");
     expect(result.stdout).toContain("--parallel");
     expect(result.stdout).toContain("--timeout <seconds>");
+  });
+
+  it("prints a TOML config template", () => {
+    const result = runCli(["config-template"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("[search]");
+    expect(result.stdout).toContain("source_priority");
   });
 });
 

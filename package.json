@@ -24,7 +24,8 @@
   "dependencies": {
     "commander": "^14.0.1",
     "fast-xml-parser": "^5.8.0",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "smol-toml": "^1.6.1"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
