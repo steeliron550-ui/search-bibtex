@@ -4,8 +4,13 @@ import path from "node:path";
 import type { FetchLike } from "./http.js";
 import type { CustomSourceConfig } from "./config.js";
 import { extractArxivId, extractDoi, normalizeWhitespace } from "./metadata.js";
-import { searchBibtex, type SearchPreferenceInput } from "./search.js";
-import type { PdfMetadataCandidate, SearchResult, SearchSourceError } from "./types.js";
+import { searchBibtex, type SearchPreferenceInput, type SearchProgressEvent } from "./search.js";
+import type {
+  PdfMetadataCandidate,
+  SearchResponse,
+  SearchResult,
+  SearchSourceError
+} from "./types.js";
 
 export interface BibtexDocumentSegment {
   kind: "text" | "entry";
@@ -26,6 +31,32 @@ export interface ParsedBibtexEntry {
   parsed: boolean;
 }
 
+export interface BibtexRefinementProgressEntry {
+  index: number;
+  citationKey: string;
+  title: string;
+  status: "searching" | "awaiting-confirmation" | "updating" | "updated" | "unchanged";
+}
+
+export interface BibtexRefinementProgressEvent {
+  completed: number;
+  total: number;
+  current?: BibtexRefinementProgressEntry;
+  searchProgress?: SearchProgressEvent;
+}
+
+export interface BibtexRefinementSelectionContext {
+  index: number;
+  total: number;
+  citationKey: string;
+  title: string;
+  response: SearchResponse;
+}
+
+export type BibtexRefinementSelectionRunner = (
+  context: BibtexRefinementSelectionContext
+) => Promise<SearchResult | undefined>;
+
 export interface BibtexRefinementOptions {
   fetcher?: FetchLike;
   preferences?: SearchPreferenceInput;
@@ -33,16 +64,19 @@ export interface BibtexRefinementOptions {
   filePath?: string;
   parallel?: boolean;
   timeoutMs?: number;
+  selectResult?: BibtexRefinementSelectionRunner;
+  onProgress?: (event: BibtexRefinementProgressEvent) => void;
 }
 
 export interface BibtexRefinementEntryReport {
   index: number;
   citationKey: string;
   title: string;
-  selectedSource: SearchResult["source"];
-  selectedTitle: string;
-  selectedScore: number;
-  matchedQuery: SearchResult["matchedQuery"];
+  updated: boolean;
+  selectedSource?: SearchResult["source"];
+  selectedTitle?: string;
+  selectedScore?: number;
+  matchedQuery?: SearchResult["matchedQuery"];
 }
 
 export interface BibtexRefinementResult {
@@ -70,7 +104,23 @@ export async function refineBibtexDocument(
   const entries: BibtexRefinementEntryReport[] = [];
   const sourceErrors: SearchSourceError[] = [];
   const basePath = options.filePath ? path.resolve(options.filePath) : "bibtex.bib";
+  const totalEntries = segments.reduce((count, segment) => {
+    if (segment.kind !== "entry" || !segment.entry || !segment.entry.parsed) {
+      return count;
+    }
+    if (SPECIAL_ENTRY_TYPES.has(segment.entry.entryType.toLowerCase())) {
+      return count;
+    }
+    return count + 1;
+  }, 0);
   let entryIndex = 0;
+  let processedEntries = 0;
+  const selectResult = options.selectResult ?? selectFirstSearchResult;
+
+  options.onProgress?.({
+    completed: 0,
+    total: totalEntries
+  });
 
   for (const segment of segments) {
     if (segment.kind === "text" || !segment.entry || !segment.entry.parsed) {
@@ -93,33 +143,107 @@ export async function refineBibtexDocument(
     if (!title) {
       throw new Error(`BibTeX entry ${citationKey} is missing a title.`);
     }
+    options.onProgress?.({
+      completed: processedEntries,
+      total: totalEntries,
+      current: {
+        index: entryIndex,
+        citationKey,
+        title,
+        status: "searching"
+      }
+    });
     const response = await searchBibtex(metadata, {
       fetcher: options.fetcher,
       preferences: options.preferences,
       customSources: options.customSources,
       parallel: options.parallel,
-      timeoutMs: options.timeoutMs
+      timeoutMs: options.timeoutMs,
+      onProgress: (searchProgress) => {
+        options.onProgress?.({
+          completed: processedEntries,
+          total: totalEntries,
+          current: {
+            index: entryIndex,
+            citationKey,
+            title,
+            status: "searching"
+          },
+          searchProgress
+        });
+      }
     });
 
     sourceErrors.push(...response.sourceErrors);
 
     if (response.results.length === 0) {
-      throw new Error(
-        `No BibTeX match found for ${citationKey} (${title}). Source errors: ${JSON.stringify(response.sourceErrors)}`
-      );
+      updatedParts.push(segment.text);
+      entries.push({
+        index: entryIndex,
+        citationKey,
+        title,
+        updated: false
+      });
+      processedEntries += 1;
+      options.onProgress?.({
+        completed: processedEntries,
+        total: totalEntries,
+        current: {
+          index: entryIndex,
+          citationKey,
+          title,
+          status: "unchanged"
+        }
+      });
+      entryIndex += 1;
+      continue;
     }
 
-    const selected = response.results[0];
+    options.onProgress?.({
+      completed: processedEntries,
+      total: totalEntries,
+      current: {
+        index: entryIndex,
+        citationKey,
+        title,
+        status: options.selectResult ? "awaiting-confirmation" : "updating"
+      }
+    });
+
+    const selected = await selectResult({
+      index: entryIndex,
+      total: totalEntries,
+      citationKey,
+      title,
+      response
+    });
+
+    if (!selected) {
+      throw new Error(`BibTeX update cancelled for ${citationKey}.`);
+    }
+
     const selectedBibtex = rewriteBibtexCitationKey(selected.bibtex, citationKey);
     updatedParts.push(selectedBibtex);
     entries.push({
       index: entryIndex,
       citationKey,
       title,
+      updated: true,
       selectedSource: selected.source,
       selectedTitle: selected.title,
       selectedScore: selected.score,
       matchedQuery: selected.matchedQuery
+    });
+    processedEntries += 1;
+    options.onProgress?.({
+      completed: processedEntries,
+      total: totalEntries,
+      current: {
+        index: entryIndex,
+        citationKey,
+        title,
+        status: "updated"
+      }
     });
     entryIndex += 1;
   }
@@ -129,6 +253,10 @@ export async function refineBibtexDocument(
     entries,
     sourceErrors
   };
+}
+
+async function selectFirstSearchResult(context: BibtexRefinementSelectionContext): Promise<SearchResult | undefined> {
+  return context.response.results[0];
 }
 
 export function parseBibtexDocument(text: string): BibtexDocumentSegment[] {

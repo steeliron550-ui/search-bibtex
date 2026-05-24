@@ -46,7 +46,7 @@ Use this skill for the `search-bibtex` binary. The binary is independent of Pape
    search-bibtex update <bibtex-path> --in-place
    ```
 
-   The `update` command also honors `--config <path>` and custom source definitions.
+   The `update` command also honors `--config <path>` and custom source definitions. In a TTY it shows a progress bar; interactive runs confirm each entry manually, and unmatched entries stay unchanged.
 
 6. For non-interactive use, select by ranked index:
 
