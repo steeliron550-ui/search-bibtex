@@ -202,6 +202,10 @@ export async function loadConfig(options: LoadConfigOptions = {}): Promise<Loade
   };
 }
 
+/**
+ * Convenience function that loads a TOML config from disk and immediately resolves all defaults.
+ * Equivalent to calling {@link loadConfig} followed by {@link resolveAppConfig}.
+ */
 export async function loadResolvedAppConfig(options: LoadConfigOptions = {}): Promise<ResolvedAppConfig> {
   const loaded = await loadConfig(options);
   return resolveAppConfig(loaded.config, {
