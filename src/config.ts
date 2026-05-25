@@ -214,6 +214,10 @@ export async function loadResolvedAppConfig(options: LoadConfigOptions = {}): Pr
   });
 }
 
+/**
+ * Merges a parsed {@link AppConfig} with default values to produce a fully resolved configuration.
+ * Validates source priority, resolves timeout values, and merges search weights with defaults.
+ */
 export function resolveAppConfig(config: AppConfig = {}, options: ResolveAppConfigOptions = {}): ResolvedAppConfig {
   const sources = config.sources?.filter((source) => source.enabled) ?? [];
   const availableSources = new Set<PaperSource>([
