@@ -1,10 +1,15 @@
-export type PaperSource =
-  | "arxiv"
-  | "crossref"
-  | "semantic-scholar"
-  | "openalex"
-  | "dblp"
-  | "doi";
+export const builtinPaperSources = [
+  "dblp",
+  "arxiv",
+  "crossref",
+  "openalex",
+  "doi",
+  "semantic-scholar"
+] as const;
+
+export type BuiltinPaperSource = typeof builtinPaperSources[number];
+
+export type PaperSource = string;
 
 export interface SortWeights {
   title: number;
