@@ -1,7 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 
 import { fetchBibtexForRecord } from "./bibtex.js";
-import { defaultSearchPreferences } from "./config.js";
+import { defaultSearchPreferences, defaultSearchTimeoutMs } from "./config.js";
 import type { FetchLike } from "./http.js";
 import { fetchJson, fetchText, toSourceError } from "./http.js";
 import { buildMetadataCandidate, generateSearchQueries, normalizeWhitespace, stripArxivVersion } from "./metadata.js";
@@ -23,6 +23,7 @@ export interface BibliographySearchOptions {
   preferences?: SearchPreferenceInput;
   pages?: number;
   onProgress?: (event: SearchProgressEvent) => void;
+  timeoutMs?: number;
 }
 
 export interface SearchProgressEvent {
@@ -42,6 +43,7 @@ interface SourceSearchContext {
   metadata: PdfMetadataCandidate;
   queries: SearchQueryCandidate[];
   fetcher: FetchLike;
+  signal?: AbortSignal;
   limit: number;
 }
 
@@ -62,6 +64,8 @@ export async function searchBibtex(
   options: BibliographySearchOptions = {}
 ): Promise<SearchResponse> {
   const preferences = mergeSearchPreferences(options.preferences);
+  const timeoutMs = options.timeoutMs ?? defaultSearchTimeoutMs;
+  const timeout = createSearchTimeoutController(timeoutMs);
   const queries = generateSearchQueries(metadata);
   const fetcher = options.fetcher ?? fetch;
   const onProgress = options.onProgress;
@@ -69,51 +73,68 @@ export async function searchBibtex(
   const candidates: BibliographicCandidate[] = [];
   const completedSources: PaperSource[] = [];
   const failedSources: PaperSource[] = [];
+  let timedOut = false;
 
-  onProgress?.({
-    completed: 0,
-    total: preferences.sourcePriority.length,
-    completedSources: [],
-    failedSources: []
-  });
-
-  for (const source of preferences.sourcePriority) {
-    try {
-      candidates.push(...await searchSource(source, { metadata, queries, fetcher, limit: preferences.limit }));
-      completedSources.push(source);
-    } catch (error) {
-      failedSources.push(source);
-      sourceErrors.push(toSourceError(source, queries[0]?.value ?? metadata.title ?? metadata.filePath, error));
-    }
+  try {
     onProgress?.({
-      completed: completedSources.length + failedSources.length,
+      completed: 0,
       total: preferences.sourcePriority.length,
-      completedSources: [...completedSources],
-      failedSources: [...failedSources]
+      completedSources: [],
+      failedSources: []
     });
-  }
 
-  const ranked = rankBibliographicCandidates(metadata, candidates, preferences).slice(0, preferences.limit * 2);
-  const results: SearchResult[] = [];
-
-  for (const candidate of ranked) {
-    try {
-      const bibtex = await fetchBibtexForRecord(candidate, fetcher);
-      results.push({ ...candidate, bibtex });
-      if (results.length >= preferences.limit) {
+    for (const source of preferences.sourcePriority) {
+      try {
+        candidates.push(...await searchSource(source, { metadata, queries, fetcher, signal: timeout.signal, limit: preferences.limit }));
+        completedSources.push(source);
+      } catch (error) {
+        failedSources.push(source);
+        sourceErrors.push(toSourceError(source, queries[0]?.value ?? metadata.title ?? metadata.filePath, error));
+        if (isSearchTimeoutError(error)) {
+          timedOut = true;
+        }
+      }
+      onProgress?.({
+        completed: completedSources.length + failedSources.length,
+        total: preferences.sourcePriority.length,
+        completedSources: [...completedSources],
+        failedSources: [...failedSources]
+      });
+      if (timedOut) {
         break;
       }
-    } catch (error) {
-      sourceErrors.push(toSourceError(candidate.source, candidate.title, error));
     }
-  }
 
-  return {
-    metadata,
-    queries,
-    results,
-    sourceErrors
-  };
+    const ranked = rankBibliographicCandidates(metadata, candidates, preferences).slice(0, preferences.limit * 2);
+    const results: SearchResult[] = [];
+
+    if (!timedOut) {
+      for (const candidate of ranked) {
+        try {
+          const bibtex = await fetchBibtexForRecord(candidate, fetcher, { signal: timeout.signal });
+          results.push({ ...candidate, bibtex });
+          if (results.length >= preferences.limit) {
+            break;
+          }
+        } catch (error) {
+          sourceErrors.push(toSourceError(candidate.source, candidate.title, error));
+          if (isSearchTimeoutError(error)) {
+            timedOut = true;
+            break;
+          }
+        }
+      }
+    }
+
+    return {
+      metadata,
+      queries,
+      results,
+      sourceErrors
+    };
+  } finally {
+    timeout.cleanup();
+  }
 }
 
 export function mergeSearchPreferences(
@@ -127,6 +148,24 @@ export function mergeSearchPreferences(
       ...preferences.weights
     }
   };
+}
+
+function createSearchTimeoutController(timeoutMs: number): { signal: AbortSignal; cleanup: () => void } {
+  const controller = new AbortController();
+  const graceMs = Math.min(1000, Math.max(100, Math.floor(timeoutMs * 0.01)));
+  const timer = setTimeout(() => {
+    controller.abort(new SearchTimeoutError(timeoutMs));
+  }, timeoutMs + graceMs);
+
+  return {
+    signal: controller.signal,
+    cleanup: () => clearTimeout(timer)
+  };
+}
+
+function isSearchTimeoutError(error: unknown): error is SearchTimeoutError {
+  return error instanceof SearchTimeoutError
+    || (error instanceof Error && error.message.startsWith("Search timed out after"));
 }
 
 async function searchSource(source: PaperSource, context: SourceSearchContext): Promise<BibliographicCandidate[]> {
@@ -153,7 +192,7 @@ async function searchDblp(context: SourceSearchContext): Promise<BibliographicCa
   url.searchParams.set("format", "json");
   url.searchParams.set("h", String(context.limit));
 
-  const response = await fetchJson<DblpSearchResponse>(context.fetcher, url.toString());
+  const response = await fetchJson<DblpSearchResponse>(context.fetcher, url.toString(), { signal: context.signal });
   return normalizeDblpHits(response);
 }
 
@@ -186,7 +225,7 @@ async function searchArxiv(context: SourceSearchContext): Promise<BibliographicC
     return [];
   }
 
-  const xml = await fetchText(context.fetcher, url.toString(), "application/atom+xml");
+  const xml = await fetchText(context.fetcher, url.toString(), "application/atom+xml", { signal: context.signal });
   return normalizeArxivFeed(xml);
 }
 
@@ -212,7 +251,7 @@ export function normalizeArxivFeed(xml: string): BibliographicCandidate[] {
 async function searchCrossref(context: SourceSearchContext): Promise<BibliographicCandidate[]> {
   if (context.metadata.doi) {
     const url = `https://api.crossref.org/works/${encodeURIComponent(context.metadata.doi)}`;
-    const response = await fetchJson<CrossrefSingleResponse>(context.fetcher, url);
+    const response = await fetchJson<CrossrefSingleResponse>(context.fetcher, url, { signal: context.signal });
     return [normalizeCrossrefItem(response.message)].filter(hasTitle);
   }
 
@@ -223,7 +262,7 @@ async function searchCrossref(context: SourceSearchContext): Promise<Bibliograph
   const url = new URL("https://api.crossref.org/works");
   url.searchParams.set("query.title", context.metadata.title);
   url.searchParams.set("rows", String(context.limit));
-  const response = await fetchJson<CrossrefSearchResponse>(context.fetcher, url.toString());
+  const response = await fetchJson<CrossrefSearchResponse>(context.fetcher, url.toString(), { signal: context.signal });
   return toArray(response.message?.items).map(normalizeCrossrefItem).filter(hasTitle);
 }
 
@@ -251,7 +290,7 @@ async function searchOpenAlex(context: SourceSearchContext): Promise<Bibliograph
   }
   url.searchParams.set("per-page", String(context.limit));
 
-  const response = await fetchJson<OpenAlexSearchResponse>(context.fetcher, url.toString());
+  const response = await fetchJson<OpenAlexSearchResponse>(context.fetcher, url.toString(), { signal: context.signal });
   return toArray(response.results).map((item) => ({
     source: "openalex" as const,
     sourceId: item.id,
@@ -269,7 +308,7 @@ async function searchSemanticScholar(context: SourceSearchContext): Promise<Bibl
     const id = context.metadata.doi ? `DOI:${context.metadata.doi}` : `ARXIV:${stripArxivVersion(context.metadata.arxivId!)}`;
     const url = new URL(`https://api.semanticscholar.org/graph/v1/paper/${encodeURIComponent(id)}`);
     url.searchParams.set("fields", "title,authors,year,venue,externalIds,url");
-    const item = await fetchJson<SemanticScholarItem>(context.fetcher, url.toString());
+    const item = await fetchJson<SemanticScholarItem>(context.fetcher, url.toString(), { signal: context.signal });
     return [normalizeSemanticScholarItem(item)].filter(hasTitle);
   }
 
@@ -281,7 +320,7 @@ async function searchSemanticScholar(context: SourceSearchContext): Promise<Bibl
   url.searchParams.set("query", context.metadata.title);
   url.searchParams.set("limit", String(context.limit));
   url.searchParams.set("fields", "title,authors,year,venue,externalIds,url");
-  const response = await fetchJson<SemanticScholarSearchResponse>(context.fetcher, url.toString());
+  const response = await fetchJson<SemanticScholarSearchResponse>(context.fetcher, url.toString(), { signal: context.signal });
   return toArray(response.data).map(normalizeSemanticScholarItem).filter(hasTitle);
 }
 
@@ -314,6 +353,13 @@ function searchDoi(metadata: PdfMetadataCandidate): BibliographicCandidate[] {
     arxivId: metadata.arxivId,
     url: `https://doi.org/${metadata.doi}`
   }];
+}
+
+class SearchTimeoutError extends Error {
+  constructor(timeoutMs: number) {
+    super(`Search timed out after ${Math.round(timeoutMs / 1000)}s.`);
+    this.name = "SearchTimeoutError";
+  }
 }
 
 function cleanResultTitle(value: string | undefined): string {
