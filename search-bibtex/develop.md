@@ -101,7 +101,7 @@ stdout BibTeX / JSON
 
 `http.ts` 封装 `fetchJson`、`fetchText` 和 HTTP 错误。所有网络错误保留状态码和消息，供 `search.ts` 写入 `sourceErrors`。
 
-`search.ts` 编排多源检索、源结果归一化、排序和 BibTeX 获取。每个外部信息源有独立的 search/normalize 函数。
+`search.ts` 编排多源检索、源结果归一化、排序和 BibTeX 获取。每个外部信息源有独立的 search/normalize 函数。搜索阶段支持共享超时预算，默认 30 秒，串行请求共用同一计时器。
 
 `ranking.ts` 计算候选分数。当前分数字段包括标题、作者、年份、标识符和来源优先级。
 
@@ -112,7 +112,7 @@ stdout BibTeX / JSON
 `selection.ts` 包含可测试的选择器状态机和真实 TTY 交互。状态机不依赖终端 IO，单元测试应优先覆盖该层。
 
 `cli.ts` 用 Commander 暴露 `config-defaults`、`metadata`、`search`、`update` 和 `select` 命令。
-`search` 和 `select` 在 TTY 中会先输出源搜索进度提示，再进入交互选择器；进度信息写入 stderr，不污染 JSON 和 BibTeX 输出。
+`search` 和 `select` 在 TTY 中会先输出源搜索进度提示，再进入交互选择器；进度信息写入 stderr，不污染 JSON 和 BibTeX 输出。交互确认时会在屏幕上显示格式化 BibTeX，并尝试复制到剪贴板；需要 stdout 输出时使用 `--select-index`。
 
 `index.ts` 导出库 API，脚本和未来集成都应从这里导入公共能力。
 
@@ -171,6 +171,7 @@ make test-e2e
 命令参数解析集中在 `cli.ts`。无效来源、无效权重、非法 index 和非 TTY 交互选择都应报错，不要自动改用默认值。
 
 `search` 在 TTY 下会进入选择器，管道或重定向时输出 JSON；`select` 始终走显式选择流程。
+`search` 和 `select` 在等待期间会输出源搜索进度；交互确认时会显示格式化 BibTeX，并尝试复制到剪贴板。`--timeout` 以秒为单位，默认 30。
 
 ## 测试策略
 
