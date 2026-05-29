@@ -3,11 +3,13 @@ import readline from "node:readline";
 import type { SearchResult, SearchSourceError } from "./types.js";
 
 export type SelectionMode = "browse" | "filter";
+export type PreviewMode = "compact" | "expanded";
 
 export interface SelectionState {
   cursor: number;
   filter: string;
   mode: SelectionMode;
+  previewMode: PreviewMode;
   selectedIndex?: number;
   cancelled: boolean;
 }
@@ -22,12 +24,17 @@ export type SelectionEvent =
   | { type: "escape" }
   | { type: "cancel" }
   | { type: "backspace" }
+  | { type: "toggle-preview" }
   | { type: "char"; value: string };
 
 export interface InteractiveSelectionOptions {
   sourceErrors?: SearchSourceError[];
   input?: NodeJS.ReadStream;
   output?: NodeJS.WriteStream;
+}
+
+export interface RenderSelectionOptions {
+  color?: boolean;
 }
 
 interface KeypressKey {
@@ -41,6 +48,7 @@ export function createSelectionState(): SelectionState {
     cursor: 0,
     filter: "",
     mode: "browse",
+    previewMode: "compact",
     cancelled: false
   };
 }
@@ -64,6 +72,13 @@ export function updateSelectionState(
       return next;
     }
     return { ...next, cancelled: true };
+  }
+
+  if (event.type === "toggle-preview") {
+    return {
+      ...next,
+      previewMode: next.previewMode === "compact" ? "expanded" : "compact"
+    };
   }
 
   if (next.mode === "filter") {
@@ -122,47 +137,50 @@ export function visibleIndexes(results: SearchResult[], filter: string): number[
 export function renderSelection(
   results: SearchResult[],
   state: SelectionState,
-  sourceErrors: SearchSourceError[] = []
+  sourceErrors: SearchSourceError[] = [],
+  options: RenderSelectionOptions = {}
 ): string {
+  const useColor = options.color ?? false;
   const visible = visibleIndexes(results, state.filter);
   const selectedVisibleIndex = visible[state.cursor];
   const selected = selectedVisibleIndex === undefined ? undefined : results[selectedVisibleIndex];
   const rows = visible.slice(0, 12).map((resultIndex, visibleIndex) => {
     const result = results[resultIndex];
-    const marker = visibleIndex === state.cursor ? ">" : " ";
+    const marker = visibleIndex === state.cursor ? paint(">", "1;32", useColor) : " ";
     const title = truncate(result.title, 74);
-    return `${marker} [${resultIndex}] ${result.source.padEnd(16)} ${result.score.toFixed(3)} ${title}`;
+    const row = `${marker} [${resultIndex}] ${paint(result.source.padEnd(16), "36", useColor)} ${paint(result.score.toFixed(3), "1;32", useColor)} ${title}`;
+    return visibleIndex === state.cursor ? paint(row, "1", useColor) : row;
   });
+  const issues = formatSourceIssueBanner(sourceErrors, useColor);
   const detail = selected ? [
     "",
-    `Title: ${selected.title}`,
-    `Authors: ${selected.authors.slice(0, 8).join(", ")}`,
-    `Year: ${selected.year ?? ""}  Venue: ${selected.venue ?? ""}`,
-    `IDs: ${[selected.doi ? `DOI ${selected.doi}` : "", selected.arxivId ? `arXiv ${selected.arxivId}` : ""].filter(Boolean).join("  ")}`,
+    `${styleLabel("Title:", useColor)} ${selected.title}`,
+    `${styleLabel("Authors:", useColor)} ${formatAuthorPreview(selected.authors)}`,
+    `${styleLabel("Year:", useColor)} ${selected.year ?? ""}  ${styleLabel("Venue:", useColor)} ${selected.venue ?? ""}`,
+    `${styleLabel("IDs:", useColor)} ${[
+      selected.doi ? `${styleLabel("DOI", useColor)} ${selected.doi}` : "",
+      selected.arxivId ? `${styleLabel("arXiv", useColor)} ${selected.arxivId}` : ""
+    ].filter(Boolean).join("  ")}`,
     "",
-    "BibTeX:",
-    ...selected.bibtex.split(/\r?\n/).slice(0, 10)
+    `${styleLabel("BibTeX preview:", useColor)} ${paint(state.previewMode, "36;1", useColor)}`,
+    ...formatBibtexPreview(selected, state.previewMode, useColor)
   ] : ["", "No candidates match the current filter."];
-  const errors = sourceErrors.length > 0 ? [
-    "",
-    `Source errors: ${sourceErrors.map((error) => `${error.source}${error.status ? ` ${error.status}` : ""}`).join(", ")}`
-  ] : [];
 
   return [
-    "search-bibtex candidate selection",
-    `Filter: ${state.mode === "filter" ? "/" : ""}${state.filter}`,
-    "Keys: j/k move, g/G jump, / filter, Enter select, q cancel",
+    paint("search-bibtex candidate selection", "1", useColor),
+    ...issues,
+    `${styleLabel("Filter:", useColor)} ${state.mode === "filter" ? "/" : ""}${paint(state.filter, "36", useColor)}`,
+    paint("Keys: j/k move, g/G jump, / filter, Ctrl+O preview, Enter select, q cancel", "2", useColor),
     "",
     ...rows,
     ...detail,
-    ...errors
   ].join("\n");
 }
 
 export async function runInteractiveSelection(
   results: SearchResult[],
   options: InteractiveSelectionOptions = {}
-): Promise<SearchResult> {
+): Promise<SearchResult | undefined> {
   if (results.length === 0) {
     throw new Error("No search results to select from.");
   }
@@ -179,14 +197,15 @@ export async function runInteractiveSelection(
 
   let state = createSelectionState();
 
-  return await new Promise<SearchResult>((resolve, reject) => {
+  return await new Promise<SearchResult | undefined>((resolve) => {
     const render = () => {
       output.write("\x1b[2J\x1b[H");
-      output.write(renderSelection(results, state, options.sourceErrors));
+      output.write(renderSelection(results, state, options.sourceErrors, { color: true }));
     };
     const cleanup = () => {
       input.off("keypress", onKeypress);
       input.setRawMode(false);
+      input.pause();
       output.write("\x1b[2J\x1b[H");
     };
     const onKeypress = (inputText: string, key: KeypressKey) => {
@@ -198,7 +217,7 @@ export async function runInteractiveSelection(
 
       if (state.cancelled) {
         cleanup();
-        reject(new Error("Selection cancelled."));
+        resolve(undefined);
         return;
       }
 
@@ -235,6 +254,9 @@ export function keypressToSelectionEvent(input: string, key: KeypressKey): Selec
   }
   if (input === "/") {
     return { type: "filter" };
+  }
+  if (key.ctrl && (key.name === "o" || input === "\u000f")) {
+    return { type: "toggle-preview" };
   }
   if (key.name === "return") {
     return { type: "enter" };
@@ -277,6 +299,111 @@ function normalizeFilter(value: string): string {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
+function formatBibtexPreview(result: SearchResult, mode: PreviewMode, color = false): string[] {
+  if (mode === "expanded") {
+    return wrapPreviewLines(result.bibtex.trim().split(/\r?\n/), 92).slice(0, 24).map((line) => highlightBibtexLine(line, color));
+  }
+
+  const entryType = result.bibtex.trim().match(/^@([^\s{]+)/)?.[1] ?? "misc";
+  const venueField = entryType === "article" ? "journal" : entryType === "inproceedings" ? "booktitle" : "venue";
+  const lines = [
+    result.bibtex.trim().split(/\r?\n/, 1)[0] ?? `@${entryType}{preview,`,
+    `  title = {${truncate(result.title, 88)}}`,
+    `  author = {${formatAuthorPreview(result.authors, 4)}}`
+  ];
+
+  if (result.year) {
+    lines.push(`  year = {${result.year}}`);
+  }
+  if (result.venue) {
+    lines.push(`  ${venueField} = {${truncate(result.venue, 88)}}`);
+  }
+  if (result.doi) {
+    lines.push(`  doi = {${truncate(result.doi, 88)}}`);
+  }
+  if (result.arxivId) {
+    lines.push(`  eprint = {${truncate(result.arxivId, 88)}}`);
+  }
+  if (result.url) {
+    lines.push(`  url = {${truncate(result.url, 88)}}`);
+  }
+
+  lines.push("}");
+  return lines.map((line) => highlightBibtexLine(line, color));
+}
+
+function formatAuthorPreview(authors: string[], limit = 3): string {
+  if (authors.length === 0) {
+    return "";
+  }
+  if (authors.length <= limit) {
+    return authors.join(" and ");
+  }
+
+  return `${authors.slice(0, limit).join(" and ")} and ... (+${authors.length - limit} more)`;
+}
+
 function truncate(value: string, width: number): string {
   return value.length <= width ? value : `${value.slice(0, Math.max(0, width - 3))}...`;
+}
+
+function formatSourceIssueBanner(sourceErrors: SearchSourceError[], color: boolean): string[] {
+  if (sourceErrors.length === 0) {
+    return [];
+  }
+
+  const summary = sourceErrors
+    .map((error) => `${error.source}${error.status ? ` ${error.status}` : ""}${error.message ? ` ${truncate(error.message, 48)}` : ""}`)
+    .join(", ");
+  return [
+    paint("Source issues:", "1;33", color),
+    ...wrapPreviewLines([summary], 88).map((line) => paint(`  ${line}`, "33", color))
+  ];
+}
+
+function highlightBibtexLine(line: string, color: boolean): string {
+  if (!color) {
+    return line;
+  }
+
+  const entryHeader = line.match(/^(@[^\s{]+)(.*)$/);
+  if (entryHeader) {
+    return `${paint(entryHeader[1], "1;36", color)}${entryHeader[2]}`;
+  }
+
+  const field = line.match(/^(\s*)([A-Za-z][A-Za-z0-9_-]*)(\s*=\s*)(.*)$/);
+  if (field) {
+    return `${field[1]}${paint(field[2], "36;1", color)}${field[3]}${field[4]}`;
+  }
+
+  return line;
+}
+
+function styleLabel(value: string, color: boolean): string {
+  return paint(value, "1", color);
+}
+
+function paint(value: string, code: string, enabled: boolean): string {
+  return enabled ? `\u001b[${code}m${value}\u001b[0m` : value;
+}
+
+function wrapPreviewLines(lines: string[], width: number): string[] {
+  return lines.flatMap((line) => {
+    if (line.length <= width) {
+      return [line];
+    }
+
+    const wrapped: string[] = [];
+    let remaining = line.trimEnd();
+    while (remaining.length > width) {
+      const breakPoint = remaining.lastIndexOf(" ", width);
+      const slicePoint = breakPoint > 0 ? breakPoint : width;
+      wrapped.push(remaining.slice(0, slicePoint).trimEnd());
+      remaining = remaining.slice(slicePoint).trimStart();
+    }
+    if (remaining.length > 0) {
+      wrapped.push(remaining);
+    }
+    return wrapped;
+  });
 }
