@@ -36,6 +36,7 @@ describe("BibTeX refinement", () => {
     expect(result.text).toContain("# CR: Not used");
     expect(result.text).toContain("@article{achiam2023gpt,");
     expect(result.text).toContain("GPT-4 Technical Report");
+    expect(result.text).toContain("doi = {10.48550/arxiv.2303.08774},\n}");
     expect(result.text).not.toContain("@article{DBLP:conf");
   });
 
@@ -86,6 +87,7 @@ describe("BibTeX refinement", () => {
     expect(result.text).toContain("GPT-4 Technical Report");
     expect(result.text).toContain("@article{unmatched2024,");
     expect(result.text).toContain("No Match Paper");
+    expect(result.text).toContain("title = {No Match Paper},\n  year = {2024},\n}");
     expect(result.sourceErrors).toEqual([]);
     expect(events[0]).toMatchObject({ completed: 0, total: 2 });
     expect(events.some((event) => event.completed === 1 && event.status === "updated")).toBe(true);
@@ -125,6 +127,8 @@ describe("BibTeX refinement", () => {
     expect(result.entries.every((entry) => entry.updated)).toBe(true);
     expect(result.text).toContain("First Paper Updated");
     expect(result.text).toContain("Second Paper Updated");
+    expect(result.text).toContain("doi = {10.0000/first2024},\n}");
+    expect(result.text).toContain("doi = {10.0000/second2024},\n}");
   });
 
   it("aborts the update when interactive selection is cancelled", async () => {
