@@ -73,7 +73,7 @@ semantic-scholar
 3. `search.ts` 中的搜索、归一化和来源注册逻辑。
 4. `bibtex.ts` 中的专用 BibTeX 获取逻辑，若该来源需要。
 5. `tests/search.test.ts` 或相关测试。
-6. `README.md`、配置文档、架构文档和 `SKILL.md` 中的来源说明。
+6. `README.md`、`README.en.md`、配置文档、架构文档和 `SKILL.md` 中的来源说明。
 
 自定义来源不修改源码，通过 `config.toml` 的 `[[sources]]` 声明加入。
 
