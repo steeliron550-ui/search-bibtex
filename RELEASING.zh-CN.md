@@ -73,6 +73,7 @@ codesign --sign - dist-bin/macos-arm64/search-bibtex
 
 ```text
 README.md
+README.en.md
 CHANGELOG.md
 CHANGELOG.zh-CN.md
 docs/CONFIGURATION.md
