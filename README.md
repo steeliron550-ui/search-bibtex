@@ -140,7 +140,7 @@ make build-binaries
 
 `make binary` 生成当前平台二进制，`make build-binaries` 生成全部平台目标。
 
-### 开发文档
+## 开发文档
 
 - [配置](docs/CONFIGURATION.zh-CN.md) / [Configuration](docs/CONFIGURATION.md)
 - [架构](docs/ARCHITECTURE.zh-CN.md) / [Architecture](docs/ARCHITECTURE.md)
