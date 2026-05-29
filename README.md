@@ -1,6 +1,6 @@
 # search-bibtex
 
-`search-bibtex` 是一个独立的论文 PDF 到 BibTeX 工具。它从本地 PDF 中提取计算机科学论文元数据，生成 DOI、arXiv、标题和标题作者查询，检索多个公开书目信息源，按用户配置的优先级和权重排序候选结果，并让用户在终端中交互选择最终 BibTeX。
+`search-bibtex` 是一个独立的论文 PDF 到 BibTeX 工具。它从本地 PDF 中提取计算机科学论文元数据，生成 DOI、arXiv、标题和标题作者查询，检索多个公开书目信息源，按用户配置的优先级和权重排序候选结果，并让用户在终端中交互选择最终 BibTeX。默认搜索参数和自定义搜索源可以放在 `config.toml` 里。
 
 项目以多平台二进制形式分发，不走 npm 发布。运行时代码不依赖 Paperlib，也不接入 Grok search。
 
@@ -11,6 +11,7 @@
 - 检索 DBLP、arXiv、Crossref、OpenAlex、DOI 内容协商和 Semantic Scholar。
 - DBLP 是一等信息源，支持 publication search API 和单条记录 `.bib` 抓取。
 - 支持来源优先级、字段打分权重和返回数量配置。
+- 支持 POSIX 风格 `config.toml`，并允许新增声明式 HTTP 搜索源。
 - 交互式候选选择支持类 Vim 键位，也支持非交互脚本化选择。
 - 支持从现有 `.bib` 文件提取标题并更新条目，同时保留原始 citation key。
 - 失败会显式报错或出现在 `sourceErrors` 中，不提供模拟成功结果。
@@ -69,6 +70,7 @@ search-bibtex config-defaults
 search-bibtex --help
 search-bibtex -h
 search-bibtex select --help
+search-bibtex config-template
 ```
 
 Windows 对应：
@@ -132,6 +134,54 @@ search-bibtex update pdfs/test.bib --output updated.bib
 
 搜索阶段默认超时 30 秒，可用 `--timeout` 调整。
 
+## 配置文件
+
+默认配置文件路径是 `~/.config/search-bibtex/config.toml`。`search`、`select` 和 `update` 都支持 `--config <path>` 覆盖默认路径；命令行参数优先于配置文件。`search-bibtex config-template` 会输出一份可直接修改的 TOML 样板。
+
+最小配置示例：
+
+```toml
+[search]
+limit = 10
+timeout_seconds = 30
+parallel = true
+source_priority = ["dblp", "arxiv", "crossref", "openalex", "doi", "semantic-scholar"]
+
+[search.weights]
+title = 0.45
+author = 0.20
+year = 0.10
+identifier = 0.20
+source = 0.05
+```
+
+自定义 source 也放在同一个文件里：
+
+```toml
+[[sources]]
+name = "acm"
+kind = "http-json"
+enabled = true
+
+[sources.search]
+url = "https://example.test/search?query={title}&limit={limit}"
+
+[sources.response]
+items_path = "items"
+
+[sources.response.fields]
+title = "title"
+authors = "authors"
+year = "year"
+doi = "doi"
+source_id = "id"
+
+[sources.bibtex]
+strategy = "url"
+url_template = "https://example.test/bibtex/{sourceId}"
+accept = "application/x-bibtex"
+```
+
 ## 排序配置
 
 默认来源优先级：
@@ -150,6 +200,8 @@ openalex
 doi
 semantic-scholar
 ```
+
+配置文件中的 `source_priority` 可以在内置来源之外引用你定义的 `[[sources]]` 名称。
 
 字段权重通过 `--weights` 设置：
 
