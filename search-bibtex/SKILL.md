@@ -33,7 +33,13 @@ Use this skill for academic PDF to BibTeX workflows. The bundled CLI is independ
    pnpm --dir <skill-dir> dev select <pdf-path> --limit 10 --source-priority dblp,arxiv,crossref,openalex,doi
    ```
 
-5. For non-interactive use, select by ranked index:
+5. If the user already has a `.bib` file and wants refreshed fields without changing citation keys:
+
+   ```bash
+   pnpm --dir <skill-dir> dev update-bibtex <bibtex-path> --in-place
+   ```
+
+6. For non-interactive use, select by ranked index:
 
    ```bash
    pnpm --dir <skill-dir> dev select <pdf-path> --select-index 0 --format bibtex
