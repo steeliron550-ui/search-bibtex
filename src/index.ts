@@ -27,6 +27,7 @@ export {
 } from "./bibtex-file.js";
 export {
   buildMetadataCandidate,
+  buildTitleMetadataCandidate,
   extractArxivId,
   extractDoi,
   generateSearchQueries,
