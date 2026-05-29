@@ -36,7 +36,7 @@ Use this skill for the `search-bibtex` binary. The binary is independent of Pape
 5. If the user already has a `.bib` file and wants refreshed fields without changing citation keys:
 
    ```bash
-   search-bibtex update-bibtex <bibtex-path> --in-place
+   search-bibtex update <bibtex-path> --in-place
    ```
 
 6. For non-interactive use, select by ranked index:
