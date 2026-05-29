@@ -73,6 +73,7 @@ Before release, update:
 
 ```text
 README.md
+README.en.md
 CHANGELOG.md
 CHANGELOG.zh-CN.md
 docs/CONFIGURATION.md
