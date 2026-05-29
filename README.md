@@ -27,7 +27,7 @@ dist-bin/<platform-arch>/search-bibtex.exe
 
 把对应平台目录加入 `PATH`，或直接用绝对路径运行。运行二进制不需要本机安装 Node.js。
 
-### 快速开始
+## 快速开始
 
 查看帮助和默认配置：
 
