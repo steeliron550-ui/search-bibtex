@@ -57,6 +57,8 @@ export function createProgram(): Command {
       "--weights <weights>",
       "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
     )
+    .option("--parallel", "Search sources in parallel.")
+    .option("--no-parallel", "Search sources serially.")
     .option(
       "-t, --timeout <seconds>",
       "Maximum search stage duration in seconds.",
@@ -66,6 +68,7 @@ export function createProgram(): Command {
     .action(async (pdf: string, options: SearchCommandOptions) => {
       const response = await searchBibtexFromPdf(pdf, {
         pages: options.pages,
+        parallel: options.parallel ?? true,
         timeoutMs: options.timeout * 1000,
         preferences: {
           limit: options.limit,
@@ -105,6 +108,8 @@ export function createProgram(): Command {
       "--weights <weights>",
       "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
     )
+    .option("--parallel", "Search sources in parallel.")
+    .option("--no-parallel", "Search sources serially.")
     .option(
       "-t, --timeout <seconds>",
       "Maximum search stage duration in seconds.",
@@ -122,6 +127,7 @@ export function createProgram(): Command {
           sourcePriority: options.sourcePriority ? parseSourcePriority(options.sourcePriority) : undefined,
           weights: options.weights ? parseWeights(options.weights) : undefined
         },
+        parallel: options.parallel ?? true,
         timeoutMs: options.timeout * 1000
       });
 
@@ -163,6 +169,8 @@ export function createProgram(): Command {
       "--weights <weights>",
       "Comma-separated scoring weights, e.g. title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05."
     )
+    .option("--parallel", "Search sources in parallel.")
+    .option("--no-parallel", "Search sources serially.")
     .option(
       "-t, --timeout <seconds>",
       "Maximum search stage duration in seconds.",
@@ -172,6 +180,7 @@ export function createProgram(): Command {
     .action(async (pdf: string, options: SelectCommandOptions) => {
       const response = await searchBibtexFromPdf(pdf, {
         pages: options.pages,
+        parallel: options.parallel ?? true,
         timeoutMs: options.timeout * 1000,
         preferences: {
           limit: options.limit,
@@ -224,6 +233,7 @@ interface SearchCommandOptions {
   limit?: number;
   sourcePriority?: string;
   weights?: string;
+  parallel?: boolean;
   timeout: number;
 }
 
