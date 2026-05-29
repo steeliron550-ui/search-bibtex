@@ -8,10 +8,9 @@ describe("defaultSearchPreferences", () => {
       "dblp",
       "arxiv",
       "crossref",
-      "semantic-scholar",
       "openalex",
-      "dblp",
-      "doi"
+      "doi",
+      "semantic-scholar"
     ]);
     expect(defaultSearchPreferences.limit).toBeGreaterThan(0);
     expect(Object.values(defaultSearchPreferences.weights).reduce((sum, value) => sum + value, 0)).toBeCloseTo(1);
