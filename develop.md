@@ -155,7 +155,7 @@ node20-win-arm64
 ```bash
 make install
 make build
-make build-binary
+make binary
 make build-binaries
 make clean
 make test
