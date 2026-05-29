@@ -27,11 +27,15 @@ Use this skill for the `search-bibtex` binary. The binary is independent of Pape
    search-bibtex search <pdf-path> --limit 10 --timeout 30 --source-priority dblp,arxiv,crossref,openalex,doi
    ```
 
+   Parallel source search is on by default; use `--no-parallel` only if the user wants serial lookup.
+
 4. Let the user choose a BibTeX entry:
 
    ```bash
    search-bibtex select <pdf-path> --limit 10 --timeout 30 --source-priority dblp,arxiv,crossref,openalex,doi
    ```
+
+   The selector keeps the default parallel lookup behavior and still shows source progress in the terminal.
 
 5. If the user already has a `.bib` file and wants refreshed fields without changing citation keys:
 
