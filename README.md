@@ -1,92 +1,51 @@
 # search-bibtex
 
-`search-bibtex` 是一个独立的论文 PDF 到 BibTeX 工具。它从本地 PDF 中提取计算机科学论文元数据，生成 DOI、arXiv、标题和标题作者查询，检索多个公开书目信息源，按用户配置的优先级和权重排序候选结果，并让用户在终端中交互选择最终 BibTeX。默认搜索参数和自定义搜索源可以放在 `config.toml` 里。
+Language: [English](#english) | [中文](#中文)
 
-项目以多平台二进制形式分发，不走 npm 发布。运行时代码不依赖 Paperlib，也不接入 Grok search。
+## 中文
 
-## 功能范围
+`search-bibtex` 是一个独立的论文 PDF 到 BibTeX 命令行工具。它从本地论文 PDF 中提取 DOI、arXiv ID、标题、作者和年份，查询 DBLP、arXiv、Crossref、OpenAlex、DOI 内容协商、Semantic Scholar 以及可选的自定义 HTTP JSON 来源，然后按配置的来源优先级和字段权重排序候选结果。用户可以在终端中交互选择 BibTeX，也可以用 `--select-index` 做非交互选择。
 
-- 识别论文 PDF 前若干页中的 DOI、arXiv ID、标题、作者和年份。
-- 覆盖计算机科学常见预印本、会议和期刊论文。
-- 检索 DBLP、arXiv、Crossref、OpenAlex、DOI 内容协商和 Semantic Scholar。
-- DBLP 是一等信息源，支持 publication search API 和单条记录 `.bib` 抓取。
-- 支持来源优先级、字段打分权重和返回数量配置。
-- 支持 POSIX 风格 `config.toml`，并允许新增声明式 HTTP 搜索源。
-- 支持直接输入论文标题字符串，或从 stdin 读取并按分号拆分多个标题。
-- 交互式候选选择支持类 Vim 键位，也支持非交互脚本化选择。
-- 支持从现有 `.bib` 文件提取标题并更新条目，同时保留原始 citation key。
-- 失败会显式报错或出现在 `sourceErrors` 中，不提供模拟成功结果。
+项目以多平台二进制分发，不走 npm 发布。运行时代码不依赖 Paperlib，也不接入 Grok search；Grok search 只可作为开发期资料检索辅助工具。
 
-## 环境要求
+### 功能
 
-- 运行二进制时不需要本机安装 Node.js。
-- 可访问 DBLP、arXiv、Crossref、OpenAlex、doi.org 和 Semantic Scholar 等外部服务的网络环境。
+- 从论文 PDF 前若干页提取可搜索元数据。
+- 支持 PDF、论文标题字符串、stdin 标题输入和现有 `.bib` 文件更新。
+- 检索内置书目信息源：DBLP、arXiv、Crossref、OpenAlex、DOI、Semantic Scholar。
+- 支持声明式 `config.toml`，可配置来源顺序、排序权重、结果数量、并行搜索和自定义 HTTP JSON 来源。
+- 交互选择器支持 Vim 风格键位和过滤；脚本场景可直接选择 0-based index。
+- 更新 `.bib` 文件时保留原 citation key，只替换条目内容。
+- 网络失败、解析失败、无候选和无效配置会显式报错或写入 `sourceErrors`。
 
-## 获取二进制
+### 安装
 
-二进制文件按平台和架构分目录放置：
+二进制按平台和架构放在 `dist-bin/`：
 
 ```text
 dist-bin/<platform-arch>/search-bibtex
 dist-bin/<platform-arch>/search-bibtex.exe
 ```
 
-不同平台的可执行文件保持同名，Windows 只是在文件扩展名上不同。
+把对应平台目录加入 `PATH`，或直接用绝对路径运行。运行二进制不需要本机安装 Node.js。
 
-## 构建产物
+### 快速开始
 
-在仓库根目录使用 Makefile 生成二进制产物：
-
-```bash
-make binary
-make build-binaries
-```
-
-`make binary` 生成当前平台产物，`make build-binaries` 生成全部平台产物。
-
-## Agent Skill
-
-本项目提供的 skill 文件位于：
-
-```text
-SKILL.md
-agents/openai.yaml
-```
-
-根据实际使用的 agent，把 `SKILL.md` 和需要的 agent 元数据放到对应的 skill 目录。Claude Code、OpenAI Codex、OpenCode 等工具的 skill 目录和加载方式不同，应按各自工具的文档或本地配置放置。
-
-使用 skill 前，确认 agent 的命令执行环境可以直接调用对应平台的 `search-bibtex` 二进制文件。
-
-## CLI 用法
-
-查看默认排序配置：
-
-```bash
-search-bibtex config-defaults
-```
-
-查看帮助：
+查看帮助和默认配置：
 
 ```bash
 search-bibtex --help
-search-bibtex -h
-search-bibtex select --help
+search-bibtex config-defaults
 search-bibtex config-template
 ```
 
-Windows 对应：
-
-```powershell
-search-bibtex.exe config-defaults
-```
-
-提取 PDF 元数据和查询候选：
+从 PDF 提取元数据：
 
 ```bash
 search-bibtex metadata paper.pdf
 ```
 
-搜索并在终端进入选择器；重定向时返回 JSON：
+搜索 PDF 并在 TTY 中选择候选；重定向或管道环境会输出 JSON：
 
 ```bash
 search-bibtex search paper.pdf \
@@ -95,46 +54,11 @@ search-bibtex search paper.pdf \
   --timeout 30
 ```
 
-终端里会先显示源搜索进度提示，然后再进入选择器。默认并行搜索；如需串行，可加 `--no-parallel`。确认后会在屏幕上显示格式化 BibTeX，并尝试复制到剪贴板。
-
-交互选择 BibTeX：
+直接输出第 0 个候选的 BibTeX：
 
 ```bash
-search-bibtex select paper.pdf
+search-bibtex select paper.pdf --select-index 0 --format bibtex
 ```
-
-交互确认会留在屏幕上，显示格式化后的 BibTeX，并尝试复制到剪贴板；不会再重复把同一份 BibTeX 打到 stdout。需要机器读取时用 `--select-index`。
-
-非交互选择第 0 个候选，适合脚本：
-
-```bash
-search-bibtex select paper.pdf \
-  --select-index 0 \
-  --format bibtex
-```
-
-输出完整 JSON：
-
-```bash
-search-bibtex select paper.pdf \
-  --select-index 0 \
-  --format json
-```
-
-更新现有 BibTeX 文件并保留引用名：
-
-```bash
-search-bibtex update tests/bibtex/acl_test.bib --in-place
-```
-
-写到新文件：
-
-```bash
-search-bibtex update tests/bibtex/acl_test.bib --output updated.bib
-```
-
-搜索阶段默认超时 30 秒，可用 `--timeout` 调整。
-`update` 在 TTY 下会显示进度条；交互式运行时会逐条确认，未匹配的条目保持不变。
 
 从标题字符串搜索，多个标题默认用英文分号分隔：
 
@@ -143,13 +67,18 @@ search-bibtex search-title "Self-Instruct: Aligning Language Models with Self-Ge
 printf 'Self-Instruct: Aligning Language Models with Self-Generated Instructions; DFlash: Block Diffusion for Flash Speculative Decoding' | search-bibtex search-title
 ```
 
-`search-title` 会读取 stdin，或接受命令行里的标题字符串。用 `--delimiter` 可以改分隔符。
+更新现有 BibTeX 文件并保留引用名：
 
-## 配置文件
+```bash
+search-bibtex update references.bib --in-place
+search-bibtex update references.bib --output updated.bib
+```
 
-默认配置文件路径是 `~/.config/search-bibtex/config.toml`。`search`、`select` 和 `update` 都支持 `--config <path>` 覆盖默认路径；命令行参数优先于配置文件。`search-bibtex config-template` 会输出一份可直接修改的 TOML 样板。
+### 配置
 
-最小配置示例：
+默认配置文件路径是 `~/.config/search-bibtex/config.toml`。缺省路径文件不存在时会直接使用内置默认值；显式传入 `--config <path>` 且文件不存在时会报错。命令行参数优先于配置文件。
+
+最小配置：
 
 ```toml
 [search]
@@ -166,76 +95,21 @@ identifier = 0.20
 source = 0.05
 ```
 
-自定义 source 也放在同一个文件里：
+完整配置说明见 [中文配置文档](docs/CONFIGURATION.zh-CN.md) 和 [English configuration docs](docs/CONFIGURATION.md)。
 
-```toml
-[[sources]]
-name = "acm"
-kind = "http-json"
-enabled = true
+### CLI 命令
 
-[sources.search]
-url = "https://example.test/search?query={title}&limit={limit}"
+| Command | 用途 |
+|---|---|
+| `config-defaults` | 输出默认搜索和排序配置 JSON。 |
+| `config-template` | 输出可修改的 TOML 配置样板。 |
+| `metadata <pdf>` | 从 PDF 提取元数据和查询候选。 |
+| `search <pdf>` | 搜索并排序候选；TTY 中进入交互选择器，非 TTY 输出 JSON。 |
+| `select <pdf>` | 搜索后交互选择，或用 `--select-index` 输出指定候选。 |
+| `search-title [titles...]` | 从标题字符串或 stdin 搜索候选。 |
+| `update <bibtex>` | 刷新现有 `.bib` 文件条目并保留 citation key。 |
 
-[sources.response]
-items_path = "items"
-
-[sources.response.fields]
-title = "title"
-authors = "authors"
-year = "year"
-doi = "doi"
-source_id = "id"
-
-[sources.bibtex]
-strategy = "url"
-url_template = "https://example.test/bibtex/{sourceId}"
-accept = "application/x-bibtex"
-```
-
-## 排序配置
-
-默认来源优先级：
-
-```text
-dblp,arxiv,crossref,openalex,doi,semantic-scholar
-```
-
-可用来源：
-
-```text
-dblp
-arxiv
-crossref
-openalex
-doi
-semantic-scholar
-```
-
-配置文件中的 `source_priority` 可以在内置来源之外引用你定义的 `[[sources]]` 名称。
-
-字段权重通过 `--weights` 设置：
-
-```bash
-search-bibtex search paper.pdf \
-  --weights title=0.5,author=0.2,year=0.1,identifier=0.15,source=0.05
-```
-
-可用权重字段：
-
-```text
-title       标题相似度
-author      作者重合度
-year        年份匹配
-identifier  DOI 或 arXiv ID 匹配
-source      来源优先级
-```
-
-权重值必须是非负数字。工具不会自动归一化权重；数值越大，该字段对排序影响越高。
-
-## 交互键位
-
-交互选择界面默认写入 stderr，最终 BibTeX 或 JSON 写入 stdout。
+交互选择器键位：
 
 ```text
 j / Down     向下移动
@@ -249,30 +123,195 @@ q            取消选择
 Ctrl-C       取消选择
 ```
 
-过滤内容会匹配标题、作者、venue、来源、DOI 和 arXiv ID。
+### 从源码构建
 
-## 输出结构
-
-`search` 命令返回：
-
-```json
-{
-  "metadata": {},
-  "queries": [],
-  "results": [],
-  "sourceErrors": []
-}
+```bash
+pnpm install
+pnpm build
+pnpm build:binary
 ```
 
-`results` 中每个候选包含来源、标题、作者、年份、venue、DOI、arXiv ID、匹配分数、分数字段明细和 BibTeX。外部服务失败不会被静默忽略，会记录到 `sourceErrors`；如果没有候选且存在源错误，CLI 会以失败状态退出。
+也可以使用 Makefile：
 
-## 限制
+```bash
+make install
+make build
+make binary
+make build-binaries
+```
 
-- PDF 文本抽取依赖文件本身的可抽取文本质量；扫描版 PDF 需要先做 OCR。
-- Semantic Scholar 匿名访问可能触发限流，限流会显示为源错误。
-- 外部书目信息源的 BibTeX 风格不完全一致，本工具保留源返回的 BibTeX，只做必要的首尾空白规范化。
-- 当前目标是本地 CLI 和二进制分发，不提供长期后台服务或图形界面。
+`make binary` 生成当前平台二进制，`make build-binaries` 生成全部平台目标。
 
-## 许可证
+### 开发文档
 
-MIT
+- [配置](docs/CONFIGURATION.zh-CN.md) / [Configuration](docs/CONFIGURATION.md)
+- [架构](docs/ARCHITECTURE.zh-CN.md) / [Architecture](docs/ARCHITECTURE.md)
+- [测试](docs/TESTING.zh-CN.md) / [Testing](docs/TESTING.md)
+- [贡献](CONTRIBUTING.zh-CN.md) / [Contributing](CONTRIBUTING.md)
+- [发布](RELEASING.zh-CN.md) / [Releasing](RELEASING.md)
+- [变更记录](CHANGELOG.zh-CN.md) / [Changelog](CHANGELOG.md)
+
+### 限制
+
+PDF 文本抽取依赖文件本身的可抽取文本质量；扫描版 PDF 需要先做 OCR。Semantic Scholar 匿名访问可能触发限流，限流会显示为源错误。外部书目信息源的 BibTeX 风格不完全一致，本工具保留源返回的 BibTeX，只做必要的首尾空白规范化。
+
+### 许可证
+
+MIT，见 [LICENSE](LICENSE)。
+
+## English
+
+`search-bibtex` is a standalone CLI that turns academic paper PDFs into BibTeX candidates. It extracts DOI, arXiv ID, title, authors, and year from local PDFs, searches DBLP, arXiv, Crossref, OpenAlex, DOI content negotiation, Semantic Scholar, and optional custom HTTP JSON sources, then ranks candidates by configured source priority and field weights. Users can choose a result interactively in the terminal or select a 0-based result index for scripts.
+
+The project is distributed as multi-platform binaries, not as an npm package. Runtime code does not depend on Paperlib and does not integrate Grok search; Grok search may only be used as a development-time research aid.
+
+### Features
+
+- Extract searchable metadata from the first pages of paper PDFs.
+- Search from PDFs, title strings, stdin title input, or existing `.bib` files.
+- Query built-in sources: DBLP, arXiv, Crossref, OpenAlex, DOI, and Semantic Scholar.
+- Configure source order, ranking weights, result limits, parallel search, and custom HTTP JSON sources through `config.toml`.
+- Use a Vim-style interactive selector with filtering, or choose a result by index for automation.
+- Refresh `.bib` entries while preserving original citation keys.
+- Surface network failures, parse failures, empty results, and invalid config as explicit errors or `sourceErrors`.
+
+### Install
+
+Binaries are grouped by platform and architecture under `dist-bin/`:
+
+```text
+dist-bin/<platform-arch>/search-bibtex
+dist-bin/<platform-arch>/search-bibtex.exe
+```
+
+Add the matching directory to `PATH`, or run the binary by absolute path. Running the binary does not require Node.js on the target machine.
+
+### Quick Start
+
+Inspect help and defaults:
+
+```bash
+search-bibtex --help
+search-bibtex config-defaults
+search-bibtex config-template
+```
+
+Extract PDF metadata:
+
+```bash
+search-bibtex metadata paper.pdf
+```
+
+Search a PDF and choose in a TTY; redirected or piped output is JSON:
+
+```bash
+search-bibtex search paper.pdf \
+  --source-priority dblp,arxiv,crossref,openalex,doi \
+  --limit 5 \
+  --timeout 30
+```
+
+Print the first ranked candidate as BibTeX:
+
+```bash
+search-bibtex select paper.pdf --select-index 0 --format bibtex
+```
+
+Search from title strings. Multiple titles are split by semicolon by default:
+
+```bash
+search-bibtex search-title "Self-Instruct: Aligning Language Models with Self-Generated Instructions; DFlash: Block Diffusion for Flash Speculative Decoding"
+printf 'Self-Instruct: Aligning Language Models with Self-Generated Instructions; DFlash: Block Diffusion for Flash Speculative Decoding' | search-bibtex search-title
+```
+
+Refresh an existing BibTeX file while keeping citation keys:
+
+```bash
+search-bibtex update references.bib --in-place
+search-bibtex update references.bib --output updated.bib
+```
+
+### Configuration
+
+The default config path is `~/.config/search-bibtex/config.toml`. A missing default-path config file is skipped and built-in defaults are used; an explicitly provided missing `--config <path>` fails. CLI flags override config file values.
+
+Minimal config:
+
+```toml
+[search]
+limit = 10
+timeout_seconds = 30
+parallel = true
+source_priority = ["dblp", "arxiv", "crossref", "openalex", "doi", "semantic-scholar"]
+
+[search.weights]
+title = 0.45
+author = 0.20
+year = 0.10
+identifier = 0.20
+source = 0.05
+```
+
+Full reference: [Configuration](docs/CONFIGURATION.md) and [中文配置文档](docs/CONFIGURATION.zh-CN.md).
+
+### CLI Commands
+
+| Command | Purpose |
+|---|---|
+| `config-defaults` | Print default search and ranking preferences as JSON. |
+| `config-template` | Print a TOML configuration template. |
+| `metadata <pdf>` | Extract PDF metadata and generated search queries. |
+| `search <pdf>` | Search and rank candidates; opens the selector in a TTY, prints JSON outside a TTY. |
+| `select <pdf>` | Search and choose interactively, or print one candidate with `--select-index`. |
+| `search-title [titles...]` | Search from title strings or stdin. |
+| `update <bibtex>` | Refresh existing `.bib` entries while preserving citation keys. |
+
+Interactive selector keys:
+
+```text
+j / Down     Move down
+k / Up       Move up
+g            Jump to first item
+G            Jump to last item
+/            Enter filter mode
+Enter        Confirm filter or choose current candidate
+Esc          Exit filter or cancel selection
+q            Cancel selection
+Ctrl-C       Cancel selection
+```
+
+### Build from Source
+
+```bash
+pnpm install
+pnpm build
+pnpm build:binary
+```
+
+Makefile entry points are also available:
+
+```bash
+make install
+make build
+make binary
+make build-binaries
+```
+
+`make binary` builds the current-platform binary. `make build-binaries` builds every configured platform target.
+
+### Development Docs
+
+- [Configuration](docs/CONFIGURATION.md) / [配置](docs/CONFIGURATION.zh-CN.md)
+- [Architecture](docs/ARCHITECTURE.md) / [架构](docs/ARCHITECTURE.zh-CN.md)
+- [Testing](docs/TESTING.md) / [测试](docs/TESTING.zh-CN.md)
+- [Contributing](CONTRIBUTING.md) / [贡献](CONTRIBUTING.zh-CN.md)
+- [Releasing](RELEASING.md) / [发布](RELEASING.zh-CN.md)
+- [Changelog](CHANGELOG.md) / [变更记录](CHANGELOG.zh-CN.md)
+
+### Limits
+
+PDF extraction depends on embedded text quality; scanned PDFs need OCR first. Anonymous Semantic Scholar requests may be rate-limited and will appear as source errors. External bibliography sources use different BibTeX styles; this tool preserves source BibTeX and only normalizes surrounding whitespace.
+
+### License
+
+MIT, see [LICENSE](LICENSE).
