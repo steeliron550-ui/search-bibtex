@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { PDFParse } from "pdf-parse";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 
 import type { PdfDocumentSnapshot } from "./types.js";
 
@@ -15,29 +15,21 @@ export async function extractPdfDocumentSnapshot(
 ): Promise<PdfDocumentSnapshot> {
   const resolvedPath = path.resolve(filePath);
   const data = await readFile(resolvedPath);
-  const parser = new PDFParse({ data });
+  const pages = options.pages ?? 2;
+  const result = await pdfParse(data, { max: pages });
 
-  try {
-    const pages = options.pages ?? 2;
-    const info = await parser.getInfo({ parsePageInfo: false });
-    const textResult = await parser.getText({ first: pages });
-    const text = textResult.text;
-
-    return {
-      filePath: resolvedPath,
-      pageCount: info.total,
-      info: {
-        title: optionalString(info.info?.Title),
-        author: optionalString(info.info?.Author),
-        subject: optionalString(info.info?.Subject),
-        keywords: optionalString(info.info?.Keywords)
-      },
-      text,
-      lines: text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
-    };
-  } finally {
-    await parser.destroy();
-  }
+  return {
+    filePath: resolvedPath,
+    pageCount: result.numpages,
+    info: {
+      title: optionalString(result.info?.Title),
+      author: optionalString(result.info?.Author),
+      subject: optionalString(result.info?.Subject),
+      keywords: optionalString(result.info?.Keywords)
+    },
+    text: result.text,
+    lines: result.text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+  };
 }
 
 function optionalString(value: unknown): string | undefined {
