@@ -36,11 +36,11 @@ dist-bin/<platform-arch>/search-bibtex.exe
 在仓库根目录使用 Makefile 生成二进制产物：
 
 ```bash
-make build-binary
+make binary
 make build-binaries
 ```
 
-`make build-binary` 生成当前平台产物，`make build-binaries` 生成全部平台产物。
+`make binary` 生成当前平台产物，`make build-binaries` 生成全部平台产物。
 
 ## Agent Skill
 
