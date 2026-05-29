@@ -25,6 +25,14 @@ export {
   refineBibtexDocument,
   refineBibtexFile
 } from "./bibtex-file.js";
+export type {
+  BibtexRefinementEntryReport,
+  BibtexRefinementProgressEntry,
+  BibtexRefinementProgressEvent,
+  BibtexRefinementSelectionContext,
+  BibtexRefinementSelectionRunner,
+  BibtexRefinementResult
+} from "./bibtex-file.js";
 export {
   buildMetadataCandidate,
   buildTitleMetadataCandidate,
