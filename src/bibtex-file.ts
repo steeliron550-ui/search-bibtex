@@ -51,6 +51,7 @@ export interface BibtexRefinementSelectionContext {
   total: number;
   citationKey: string;
   title: string;
+  currentEntry: ParsedBibtexEntry;
   response: SearchResponse;
 }
 
@@ -87,6 +88,7 @@ export interface BibtexRefinementResult {
 }
 
 const SPECIAL_ENTRY_TYPES = new Set(["comment", "preamble", "string"]);
+export const KEEP_CURRENT_SELECTION_SOURCE = "__keep-current__";
 
 export async function refineBibtexFile(
   filePath: string,
@@ -216,6 +218,7 @@ export async function refineBibtexDocument(
       total: totalEntries,
       citationKey,
       title,
+      currentEntry: segment.entry,
       response
     });
 
@@ -223,7 +226,9 @@ export async function refineBibtexDocument(
       throw new Error(`BibTeX update cancelled for ${citationKey}.`);
     }
 
-    const selectedBibtex = formatBibtexText(rewriteBibtexCitationKey(selected.bibtex, citationKey));
+    const selectedBibtex = selected.source === KEEP_CURRENT_SELECTION_SOURCE
+      ? segment.text
+      : formatBibtexText(rewriteBibtexCitationKey(selected.bibtex, citationKey));
     updatedParts.push(selectedBibtex);
     entries.push({
       index: entryIndex,
