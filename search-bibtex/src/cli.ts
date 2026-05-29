@@ -18,6 +18,7 @@ export function createProgram(): Command {
   program
     .name("search-bibtex")
     .description("Extract paper PDF metadata, search bibliographic sources, and choose a BibTeX entry.")
+    .helpOption("-h, --help", "Display help for command.")
     .version("0.1.0");
 
   program
