@@ -101,7 +101,7 @@ stdout BibTeX / JSON
 
 `http.ts` 封装 `fetchJson`、`fetchText` 和 HTTP 错误。所有网络错误保留状态码和消息，供 `search.ts` 写入 `sourceErrors`。
 
-`search.ts` 编排多源检索、源结果归一化、排序和 BibTeX 获取。每个外部信息源有独立的 search/normalize 函数。搜索阶段支持共享超时预算，默认 30 秒，串行请求共用同一计时器。
+`search.ts` 编排多源检索、源结果归一化、排序和 BibTeX 获取。每个外部信息源有独立的 search/normalize 函数。搜索阶段默认并行，串行模式保留给 `--no-parallel`；默认 30 秒的超时预算在串行模式下按总时长计算，在并行模式下按请求计算。
 
 `ranking.ts` 计算候选分数。当前分数字段包括标题、作者、年份、标识符和来源优先级。
 
@@ -171,7 +171,7 @@ make test-e2e
 命令参数解析集中在 `cli.ts`。无效来源、无效权重、非法 index 和非 TTY 交互选择都应报错，不要自动改用默认值。
 
 `search` 在 TTY 下会进入选择器，管道或重定向时输出 JSON；`select` 始终走显式选择流程。
-`search` 和 `select` 在等待期间会输出源搜索进度；交互确认时会显示格式化 BibTeX，并尝试复制到剪贴板。`--timeout` 以秒为单位，默认 30。
+`search` 和 `select` 在等待期间会输出源搜索进度；交互确认时会显示格式化 BibTeX，并尝试复制到剪贴板。`--parallel` 默认开启，`--no-parallel` 可切回串行；`--timeout` 以秒为单位，默认 30。
 
 ## 测试策略
 
