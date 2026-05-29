@@ -83,7 +83,7 @@ For documentation-only changes, at minimum check:
 
 ```bash
 git diff --check
-rg -n "develop\\.md|CONFIGURATION|ARCHITECTURE|TESTING|RELEASING|CONTRIBUTING|CHANGELOG" README.md docs CONTRIBUTING*.md RELEASING*.md CHANGELOG*.md SKILL.md
+rg -n "develop\\.md|CONFIGURATION|ARCHITECTURE|TESTING|RELEASING|CONTRIBUTING|CHANGELOG" README*.md docs CONTRIBUTING*.md RELEASING*.md CHANGELOG*.md SKILL.md
 ```
 
 If command names, options, config fields, or default source order change, update the bilingual README, configuration docs, architecture docs, and `SKILL.md`.
