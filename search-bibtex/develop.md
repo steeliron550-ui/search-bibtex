@@ -32,6 +32,7 @@ search-bibtex/
     build-binaries.ts
     e2e-pdfs.ts
   src/
+    bibtex-file.ts
     bibtex.ts
     cli.ts
     config.ts
@@ -104,9 +105,11 @@ stdout BibTeX / JSON
 
 `bibtex.ts` 负责 BibTeX 获取和生成。DBLP 记录使用 `https://dblp.org/rec/<key>.bib`；DOI 记录使用 `https://doi.org/<doi>` 的 BibTeX 内容协商；arXiv 或无 DOI 记录生成明确来源的 BibTeX。
 
+`bibtex-file.ts` 负责现有 BibTeX 文档的解析、标题提取、模糊搜索和条目重写。它保留原始 citation key，只替换条目内容，适合刷新 `.bib` 文件而不改动主文档引用。
+
 `selection.ts` 包含可测试的选择器状态机和真实 TTY 交互。状态机不依赖终端 IO，单元测试应优先覆盖该层。
 
-`cli.ts` 用 Commander 暴露 `config-defaults`、`metadata`、`search` 和 `select` 命令。
+`cli.ts` 用 Commander 暴露 `config-defaults`、`metadata`、`search`、`update-bibtex` 和 `select` 命令。
 
 `index.ts` 导出库 API，脚本和未来集成都应从这里导入公共能力。
 
@@ -198,6 +201,8 @@ pnpm --dir search-bibtex test:e2e
 ```
 
 `scripts/e2e-pdfs.ts` 使用三个本地 PDF 样本，执行 PDF 解析、搜索、排序、`--select-index 0` 等价选择和 BibTeX 首行校验。该测试会因为网络源错误而失败。
+
+`tests/bibtex-file.test.ts` 覆盖 BibTeX 文档解析和更新逻辑，使用 `pdfs/test.bib` 的格式作为解析样本，并通过 fake fetcher 验证 citation key 保持不变。
 
 ## 二进制产物检查
 
