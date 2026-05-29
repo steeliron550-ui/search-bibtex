@@ -95,7 +95,7 @@ source = 0.05
 
 完整配置说明见 [中文配置文档](docs/CONFIGURATION.zh-CN.md) 和 [English configuration docs](docs/CONFIGURATION.md)。
 
-### CLI 命令
+## CLI 命令
 
 | Command | 用途 |
 |---|---|
