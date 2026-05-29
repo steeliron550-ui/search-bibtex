@@ -117,7 +117,23 @@ describe("search aggregation", () => {
     ]);
   });
 
-  it("reports source search progress as each channel completes", async () => {
+  it("searches sources in parallel by default", async () => {
+    maxParallelFetches = 0;
+    parallelFetches = 0;
+
+    await searchBibtex(metadata, {
+      fetcher: parallelFetchProbe,
+      preferences: {
+        sourcePriority: ["dblp", "crossref"],
+        limit: 1
+      },
+      timeoutMs: 1000
+    });
+
+    expect(maxParallelFetches).toBeGreaterThan(1);
+  });
+
+  it("reports source search progress as each channel completes in serial mode", async () => {
     const events: Array<{ completed: number; total: number; completedSources: string[]; failedSources: string[] }> = [];
 
     await searchBibtex(metadata, {
@@ -126,6 +142,7 @@ describe("search aggregation", () => {
         sourcePriority: ["dblp", "crossref", "semantic-scholar"],
         limit: 3
       },
+      parallel: false,
       onProgress: (event) => {
         events.push({
           completed: event.completed,
@@ -151,6 +168,7 @@ describe("search aggregation", () => {
         sourcePriority: ["dblp", "crossref"],
         limit: 3
       },
+      parallel: false,
       timeoutMs: 10
     });
 
@@ -238,6 +256,82 @@ async function slowTimeoutFetch(input: RequestInfo | URL, init?: RequestInit): P
       reject(signal.reason ?? new Error("aborted"));
     }, { once: true });
   });
+}
+
+let parallelFetches = 0;
+let maxParallelFetches = 0;
+
+async function parallelFetchProbe(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = String(input);
+  if (url.startsWith("https://dblp.org/search/publ/api")) {
+    return await delayedResponse({
+      result: {
+        hits: {
+          hit: {
+            info: {
+              title: metadata.title,
+              authors: { author: [{ text: "Yizhong Wang" }, { text: "Yeganeh Kordi" }] },
+              venue: "ACL",
+              year: "2023",
+              key: "conf/acl/WangKMLSKH23",
+              doi: metadata.doi
+            }
+          }
+        }
+      }
+    }, init);
+  }
+
+  if (url.startsWith("https://api.crossref.org/works")) {
+    return await delayedResponse({
+      message: {
+        items: [{
+          title: [metadata.title],
+          DOI: metadata.doi,
+          issued: { "date-parts": [[2023]] },
+          "container-title": ["ACL"],
+          author: [{ given: "Yizhong", family: "Wang" }]
+        }]
+      }
+    }, init);
+  }
+
+  if (url === "https://dblp.org/rec/conf/acl/WangKMLSKH23.bib") {
+    return new Response("@inproceedings{WangKMLSKH23}", {
+      status: 200,
+      headers: { "content-type": "application/x-bibtex" }
+    });
+  }
+
+  if (url.startsWith("https://doi.org/")) {
+    return new Response("@inproceedings{CrossrefBib}", {
+      status: 200,
+      headers: { "content-type": "application/x-bibtex" }
+    });
+  }
+
+  throw new Error(`Unexpected URL ${url}`);
+}
+
+async function delayedResponse(value: unknown, init?: RequestInit): Promise<Response> {
+  const signal = init?.signal;
+  parallelFetches += 1;
+  maxParallelFetches = Math.max(maxParallelFetches, parallelFetches);
+
+  try {
+    return await new Promise<Response>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        resolve(jsonResponse(value));
+      }, 50);
+
+      signal?.addEventListener("abort", () => {
+        clearTimeout(timer);
+        reject(signal.reason ?? new Error("aborted"));
+      }, { once: true });
+    });
+  } finally {
+    parallelFetches -= 1;
+  }
 }
 
 function jsonResponse(value: unknown): Response {
