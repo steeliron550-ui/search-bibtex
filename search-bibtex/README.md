@@ -31,6 +31,19 @@ search-bibtex/dist-bin/<platform-arch>/search-bibtex.exe
 
 不同平台的可执行文件保持同名，Windows 只是在文件扩展名上不同。
 
+## Agent Skill
+
+本项目提供的 skill 文件位于：
+
+```text
+search-bibtex/SKILL.md
+search-bibtex/agents/openai.yaml
+```
+
+根据实际使用的 agent，把 `SKILL.md` 和需要的 agent 元数据放到对应的 skill 目录。Claude Code、OpenAI Codex、OpenCode 等工具的 skill 目录和加载方式不同，应按各自工具的文档或本地配置放置。
+
+使用 skill 前，确认 agent 的命令执行环境可以直接调用对应平台的 `search-bibtex` 二进制文件。
+
 ## CLI 用法
 
 查看默认排序配置：
