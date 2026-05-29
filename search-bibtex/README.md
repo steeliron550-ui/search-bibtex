@@ -12,6 +12,7 @@
 - DBLP 是一等信息源，支持 publication search API 和单条记录 `.bib` 抓取。
 - 支持来源优先级、字段打分权重和返回数量配置。
 - 交互式候选选择支持类 Vim 键位，也支持非交互脚本化选择。
+- 支持从现有 `.bib` 文件提取标题并更新条目，同时保留原始 citation key。
 - 失败会显式报错或出现在 `sourceErrors` 中，不提供模拟成功结果。
 
 ## 环境要求
@@ -116,6 +117,18 @@ Windows 对应：
 ./dist-bin/search-bibtex-linux-x64 select paper.pdf \
   --select-index 0 \
   --format json
+```
+
+更新现有 BibTeX 文件并保留引用名：
+
+```bash
+./dist-bin/search-bibtex-linux-x64 update-bibtex pdfs/test.bib --in-place
+```
+
+写到新文件：
+
+```bash
+./dist-bin/search-bibtex-linux-x64 update-bibtex pdfs/test.bib --output updated.bib
 ```
 
 ## 排序配置
