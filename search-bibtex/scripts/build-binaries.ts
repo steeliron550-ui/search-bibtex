@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -26,6 +26,9 @@ async function main(): Promise<void> {
     throw new Error(`Unknown binary build mode: ${mode}. Expected bundle, current, or all.`);
   }
 
+  await rm(distPkgDir, { recursive: true, force: true });
+  await rm(distBinDir, { recursive: true, force: true });
+
   if (mode === "bundle" || mode === "all" || mode === "current") {
     await buildBundle();
   }
@@ -37,7 +40,6 @@ async function main(): Promise<void> {
 
   const targets = mode === "current" ? [currentTarget()] : allTargets;
   await buildBinaries(targets);
-  process.stdout.write(`${JSON.stringify({ targets, distBinDir }, null, 2)}\n`);
 }
 
 async function buildBundle(): Promise<void> {
@@ -65,11 +67,12 @@ function pdfParseLibAlias(): Plugin {
 }
 
 async function buildBinaries(targets: readonly string[]): Promise<void> {
-  await mkdir(distBinDir, { recursive: true });
   const failures: string[] = [];
+  const outputs: Array<{ target: string; output: string }> = [];
 
   for (const target of targets) {
-    const output = path.join(distBinDir, outputNameForTarget(target));
+    const output = outputPathForTarget(target);
+    await mkdir(path.dirname(output), { recursive: true });
     const result = spawnSync(pnpmCommand(), [
       "exec",
       "pkg",
@@ -89,12 +92,16 @@ async function buildBinaries(targets: readonly string[]): Promise<void> {
 
     if (result.status !== 0) {
       failures.push(target);
+    } else {
+      outputs.push({ target, output });
     }
   }
 
   if (failures.length > 0) {
     throw new Error(`pkg failed for targets: ${failures.join(", ")}`);
   }
+
+  process.stdout.write(`${JSON.stringify({ targets, outputs, distBinDir }, null, 2)}\n`);
 }
 
 function pnpmCommand(): string {
@@ -127,12 +134,12 @@ function normalizeArch(value: string): string {
   throw new Error(`Unsupported architecture for binary packaging: ${value}`);
 }
 
-function outputNameForTarget(target: string): string {
+function outputPathForTarget(target: string): string {
   const [, platform, arch] = target.split("-");
   if (!platform || !arch) {
     throw new Error(`Invalid pkg target: ${target}`);
   }
-  return `search-bibtex-${platform}-${arch}${platform === "win" ? ".exe" : ""}`;
+  return path.join(distBinDir, `${platform}-${arch}`, `search-bibtex${platform === "win" ? ".exe" : ""}`);
 }
 
 main().catch((error: unknown) => {
