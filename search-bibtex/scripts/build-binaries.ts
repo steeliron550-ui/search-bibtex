@@ -1,4 +1,4 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -45,7 +45,7 @@ async function main(): Promise<void> {
 async function buildBundle(): Promise<void> {
   await mkdir(distPkgDir, { recursive: true });
   await build({
-    entryPoints: [path.join(projectDir, "src", "cli.ts")],
+    entryPoints: [path.join(projectDir, "src", "main.ts")],
     bundle: true,
     platform: "node",
     format: "cjs",
@@ -62,6 +62,23 @@ function pdfParseLibAlias(): Plugin {
       buildContext.onResolve({ filter: /^pdf-parse\/lib\/pdf-parse\.js$/ }, () => ({
         path: path.join(projectDir, "node_modules", "pdf-parse", "lib", "pdf-parse.js")
       }));
+      buildContext.onLoad({ filter: /pdf\.js\/v\d+\.\d+\.\d+\/build\/pdf\.js$/ }, async (args) => {
+        const source = await readFile(args.path, "utf8");
+        const patched = source
+          .replace(
+            /result = new value\.constructor\(buffer, value\.byteOffset, value\.byteLength\);/g,
+            "result = value.constructor.from ? value.constructor.from(buffer, value.byteOffset, value.byteLength) : new value.constructor(buffer, value.byteOffset, value.byteLength);"
+          )
+          .replace(
+            /result = new value\.constructor\(value\);/g,
+            "result = value.constructor.from ? value.constructor.from(value) : new value.constructor(value);"
+          )
+          .replace(/new Buffer\(literals\)/g, "Buffer.from(literals)");
+        return {
+          contents: patched,
+          loader: "js"
+        };
+      });
     }
   };
 }
