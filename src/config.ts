@@ -267,6 +267,10 @@ export function parseConfigToml(text: string, configPath?: string): AppConfig {
   };
 }
 
+/**
+ * Validates that all sources in the priority list are known (either built-in or defined as custom sources).
+ * Throws {@link ConfigError} if any unknown sources are referenced.
+ */
 export function validateSourcePriority(
   sourcePriority: PaperSource[],
   availableSources: ReadonlySet<PaperSource>,
