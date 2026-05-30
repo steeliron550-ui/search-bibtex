@@ -1,3 +1,10 @@
+/**
+ * download.ts — PDF download utilities for search results.
+ *
+ * Resolves PDF download URLs from search results (arXiv, Semantic Scholar,
+ * direct links) and saves the files to a configurable output directory.
+ */
+
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import os from "node:os";
