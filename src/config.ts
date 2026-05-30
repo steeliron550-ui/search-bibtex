@@ -246,6 +246,10 @@ export function resolveAppConfig(config: AppConfig = {}, options: ResolveAppConf
   };
 }
 
+/**
+ * Parses a TOML string into an {@link AppConfig}.
+ * Throws {@link ConfigError} if the TOML is syntactically invalid or contains unknown keys.
+ */
 export function parseConfigToml(text: string, configPath?: string): AppConfig {
   let document: TomlTable;
   try {
